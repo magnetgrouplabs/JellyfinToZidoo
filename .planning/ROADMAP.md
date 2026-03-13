@@ -44,13 +44,13 @@ Plans:
   3. Playback resumes at the position stored in Jellyfin (ticks converted to milliseconds)
   4. Debug screen shows the full pipeline: raw intent data, resolved path, substituted SMB URI, with a manual Play button
   5. Auth token persists across app restarts without re-entering credentials
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
-- [ ] 02-04: TBD
+- [ ] 02-01-PLAN.md -- JellyfinApi + SecureStorage foundation classes with unit tests
+- [ ] 02-02-PLAN.md -- Settings screen Jellyfin Server section with secure API key storage
+- [ ] 02-03-PLAN.md -- Play.java Jellyfin intent bridge integration and debug screen
+- [ ] 02-04-PLAN.md -- Device deploy and end-to-end verification checkpoint
 
 ### Phase 3: Playback Lifecycle
 **Goal**: Jellyfin accurately reflects what the user watched, how far they got, and what to resume next
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
-| 2. Core Bridge | 0/4 | Not started | - |
+| 2. Core Bridge | 0/4 | Planned | - |
 | 3. Playback Lifecycle | 0/3 | Not started | - |
 | 4. Episode Intelligence | 0/3 | Not started | - |
 | 5. Advanced Playback | 0/3 | Not started | - |
