@@ -18,7 +18,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Authentication
 
 - [x] **AUTH-01**: User can authenticate with Jellyfin server using API key
-- [ ] **AUTH-02**: User can authenticate with Jellyfin server using username/password
+- [x] **AUTH-02**: User can authenticate with Jellyfin server using username/password
 - [x] **AUTH-03**: Credentials stored securely using Android Keystore
 - [x] **AUTH-04**: Auth token persists across app restarts
 
@@ -42,13 +42,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Settings
 
-- [ ] **SETT-01**: User can configure Jellyfin server URL
-- [ ] **SETT-02**: User can configure API key or username/password credentials
-- [ ] **SETT-03**: User can configure path substitution rule (find/replace)
+- [x] **SETT-01**: User can configure Jellyfin server URL
+- [x] **SETT-02**: User can configure API key or username/password credentials
+- [x] **SETT-03**: User can configure path substitution rule (find/replace)
 - [ ] **SETT-04**: User can configure multiple path substitution rules
-- [ ] **SETT-05**: User can configure SMB username/password (optional)
-- [ ] **SETT-06**: User can toggle debug screen on/off
-- [ ] **SETT-07**: Settings UI is D-pad navigable (Android TV / Leanback compatible)
+- [x] **SETT-05**: User can configure SMB username/password (optional)
+- [x] **SETT-06**: User can toggle debug screen on/off
+- [x] **SETT-07**: Settings UI is D-pad navigable (Android TV / Leanback compatible)
 - [ ] **SETT-08**: User can import/export settings as JSON
 
 ### Debug
@@ -104,7 +104,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | FORK-04 | Phase 1 | Complete |
 | FORK-05 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Complete |
-| AUTH-02 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Complete |
 | BRDG-01 | Phase 2 | Pending |
@@ -119,13 +119,13 @@ Deferred to future release. Tracked but not in current roadmap.
 | PLAY-04 | Phase 3 | Pending |
 | PLAY-05 | Phase 3 | Pending |
 | PLAY-06 | Phase 3 | Pending |
-| SETT-01 | Phase 2 | Pending |
-| SETT-02 | Phase 2 | Pending |
-| SETT-03 | Phase 2 | Pending |
+| SETT-01 | Phase 2 | Complete |
+| SETT-02 | Phase 2 | Complete |
+| SETT-03 | Phase 2 | Complete |
 | SETT-04 | Phase 4 | Pending |
-| SETT-05 | Phase 2 | Pending |
-| SETT-06 | Phase 2 | Pending |
-| SETT-07 | Phase 2 | Pending |
+| SETT-05 | Phase 2 | Complete |
+| SETT-06 | Phase 2 | Complete |
+| SETT-07 | Phase 2 | Complete |
 | SETT-08 | Phase 5 | Pending |
 | DEBG-01 | Phase 2 | Pending |
 | DEBG-02 | Phase 2 | Pending |
