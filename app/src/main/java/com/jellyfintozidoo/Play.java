@@ -76,6 +76,8 @@ public class Play extends AppCompatActivity
     private String message = "";
     private boolean foundSubstitution = false;
     private String videoPath = "";
+    private String jellyfinItemId = "";
+    private String jellyfinApiPath = "";
     // PLEX_REMOVED_START - Plex API: remote stream and media index tracking
     // private boolean remoteStream = false;
     // PLEX_REMOVED_END
@@ -181,7 +183,22 @@ public class Play extends AppCompatActivity
             textView1.setText(String.format(Locale.ENGLISH, message + "\n"));
         }
 
-        textView2.setText(String.format(Locale.ENGLISH, "Intent: %s\n\nPath Substitution: %s\n\nVideo Path: %s\n\nView Offset: %d\n\nSelected Audio Index: %d\n\nSelected Subtitle Index: %d\n\nNew Zidoo Player: %b\n\nNew Intent: %s", originalIntentToPrint, pathToPrint, videoPath, viewOffset, selectedAudioIndex, selectedSubtitleIndex, useNewZdiooPlayer, newIntentToPrint));
+        String debugText = String.format(Locale.ENGLISH,
+            "Intent: %s\n\n" +
+            "Jellyfin Item ID: %s\n\n" +
+            "API Path: %s\n\n" +
+            "Path Substitution: %s\n\n" +
+            "Video Path: %s\n\n" +
+            "View Offset: %d ms\n\n" +
+            "Selected Audio Index: %d\n\n" +
+            "Selected Subtitle Index: %d\n\n" +
+            "New Zidoo Player: %b\n\n" +
+            "New Intent: %s",
+            originalIntentToPrint, jellyfinItemId, jellyfinApiPath,
+            pathToPrint, videoPath, viewOffset,
+            selectedAudioIndex, selectedSubtitleIndex,
+            useNewZdiooPlayer, newIntentToPrint);
+        textView2.setText(debugText);
     }
 
     private void showDebugPageOrSendIntent()
@@ -654,12 +671,80 @@ public class Play extends AppCompatActivity
         // findServer();
         // PLEX_REMOVED_END
 
-        // TODO: Jellyfin integration will replace the Plex server communication above
-        // For now, attempt substitution on the raw URL path if not handled by ZDMC
+        // Jellyfin intent handling (replaces Plex server communication)
         if(!zdmc)
         {
-            doSubstitution(directPath);
-            showDebugPageOrSendIntent();
+            String inputUrl = originalIntent.getDataString();
+            String itemId = JellyfinApi.extractItemId(inputUrl);
+
+            if(itemId != null)
+            {
+                // This is a Jellyfin streaming URL -- resolve via API
+                jellyfinItemId = itemId;
+
+                // Check for position from intent extras (Jellyfin client sends ms)
+                int intentPosition = 0;
+                try
+                {
+                    intentPosition = originalIntent.getIntExtra("position", 0);
+                }
+                catch(Exception e)
+                {
+                    // Ignore -- some intents may not have this extra
+                }
+                final int intentPos = intentPosition;
+
+                // Read server config
+                String serverUrl = PreferenceManager.getDefaultSharedPreferences(
+                    getApplicationContext()).getString("jellyfin_server_url", "");
+                String apiKey = SecureStorage.getInstance(getApplicationContext())
+                    .getString("jellyfin_api_key", "");
+
+                if(serverUrl.isEmpty() || apiKey.isEmpty())
+                {
+                    message = "ERROR: Jellyfin server not configured. Go to Settings.";
+                    showDebugPageOrSendIntent();
+                    return;
+                }
+
+                // Call Jellyfin API asynchronously
+                JellyfinApi.getItem(serverUrl, apiKey, itemId, new JellyfinApi.Callback()
+                {
+                    @Override
+                    public void onSuccess(String serverPath, long positionTicks, String title)
+                    {
+                        jellyfinApiPath = serverPath;
+                        videoPath = serverPath;
+                        videoTitle = title;
+
+                        // Use intent position if provided, otherwise convert API ticks to ms
+                        if(intentPos > 0)
+                        {
+                            viewOffset = intentPos;
+                        }
+                        else if(positionTicks > 0)
+                        {
+                            viewOffset = (int) JellyfinApi.ticksToMs(positionTicks);
+                        }
+
+                        doSubstitution(serverPath);
+                        showDebugPageOrSendIntent();
+                    }
+
+                    @Override
+                    public void onError(String error)
+                    {
+                        message = "ERROR: " + error;
+                        showDebugPageOrSendIntent();
+                    }
+                });
+            }
+            else
+            {
+                // Not a Jellyfin URL -- try direct substitution (existing fallback behavior)
+                doSubstitution(directPath);
+                showDebugPageOrSendIntent();
+            }
         }
     }
 
