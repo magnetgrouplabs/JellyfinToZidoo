@@ -1,22 +1,27 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Jellyfin-style play triangle -->
+    <!-- Outer gradient outline triangle with rounded corners -->
     <path
-        android:fillColor="#FF00A4DC"
-        android:pathData="M38,30 L78,54 L38,78 Z" />
-    <!-- Inner highlight -->
+        android:pathData="M 38.1,28.4 L 78.9,51.1 Q 84,54 78.9,56.9 L 38.1,79.6 Q 32,83 32,77 L 32,31 Q 32,25 38.1,28.4 Z"
+        android:strokeWidth="4.5">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="21.6"
+                android:startY="25"
+                android:endX="86.4"
+                android:endY="83">
+                <item android:offset="0" android:color="#FFAA5CC3" />
+                <item android:offset="1" android:color="#FF00A4DC" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Inner solid blue triangle with rounded corners -->
     <path
-        android:fillColor="#FFAA5CC3"
-        android:pathData="M44,38 L70,54 L44,70 Z" />
-    <!-- "Z" letter for Zidoo overlay -->
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M48,46 L62,46 L48,62 L62,62"
-        android:strokeWidth="3"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+        android:pathData="M 43.9,40 L 64.1,52 Q 68,54 64.1,56 L 43.9,68 Q 40,70 40,66 L 40,42 Q 40,38 43.9,40 Z"
+        android:fillColor="#FF00A4DC" />
 </vector>
