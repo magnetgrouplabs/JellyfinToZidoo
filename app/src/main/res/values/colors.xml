@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="jellyfin_purple">#FFAA5CC3</color>
+    <color name="jellyfin_blue">#FF00A4DC</color>
+    <color name="jellyfin_dark">#FF20123A</color>
     <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
+    <color name="purple_500">#FFAA5CC3</color>
+    <color name="purple_700">#FF7C2D9E</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="dark_gray">#FF1f1f1f</color>
+    <color name="ic_launcher_background">#FF20123A</color>
 </resources>
