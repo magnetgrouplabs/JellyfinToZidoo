@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.hpn789.plextozidoo">
+    package="com.jellyfintozidoo">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -13,11 +13,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PlexToZidoo"
+        android:theme="@style/Theme.JellyfinToZidoo"
         android:requestLegacyExternalStorage="true">
         <activity
             android:name=".SettingsActivity"
-            android:theme="@style/Theme.PlexToZidoo.Settings"
+            android:theme="@style/Theme.JellyfinToZidoo.Settings"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,7 +27,7 @@
         </activity>
         <activity
             android:name=".Play"
-            android:theme="@style/Theme.PlexToZidoo.Play"
+            android:theme="@style/Theme.JellyfinToZidoo.Play"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
