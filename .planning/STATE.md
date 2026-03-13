@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-13T21:03:48.242Z"
-last_activity: 2026-03-13 -- Plan 01-02 executed (build, CI, attribution, icon, device verify)
+status: in_progress
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-13T21:47:41Z"
+last_activity: 2026-03-13 -- Plan 02-01 executed (JellyfinApi, SecureStorage, unit tests)
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_plans: 4
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -21,33 +21,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** Native Zidoo playback of Jellyfin media with seamless watch state sync
-**Current focus:** Phase 1 - Fork Setup
+**Current focus:** Phase 2 - Core Bridge
 
 ## Current Position
 
-Phase: 1 of 5 (Fork Setup) -- COMPLETE
-Plan: 2 of 2 in current phase (all done)
-Status: Phase 1 Complete
-Last activity: 2026-03-13 -- Plan 01-02 executed (build, CI, attribution, icon, device verify)
+Phase: 2 of 5 (Core Bridge) -- IN PROGRESS
+Plan: 1 of 4 in current phase
+Status: Plan 02-01 complete, continuing to 02-02
+Last activity: 2026-03-13 -- Plan 02-01 executed (JellyfinApi, SecureStorage, unit tests)
 
-Progress: [██████████] 100% (Phase 1)
+Progress: [███-------] 25% (Phase 2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 27 min
-- Total execution time: 0.88 hours
+- Total plans completed: 3
+- Average duration: 21 min
+- Total execution time: 1.03 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-fork-setup | 2 | 53 min | 27 min |
+| 02-core-bridge | 1 | 9 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: -
-- Trend: -
+- Last 5 plans: 27, 27, 9
+- Trend: improving
 
 *Updated after each plan completion*
 
@@ -66,6 +67,10 @@ Recent decisions affecting current work:
 - 01-02: Replaced jcenter() with mavenCentral() (jcenter sunset)
 - 01-02: App icon: gradient purple-to-blue outline triangle with solid blue inner (Jellyfin palette)
 - 01-02: CI uses JDK 17 temurin to match AGP 8.2.2 requirements
+- 02-01: Bumped compileSdk 31 to 34 for security-crypto 1.1.0-alpha06 compatibility
+- 02-01: Installed JDK 17 Temurin locally, configured gradle.properties org.gradle.java.home
+- 02-01: Lazy init pattern for static Android-dependent fields (OkHttpClient, Handler) for unit test compatibility
+- 02-01: Package-private test helpers (parseItemResponse, buildAuthHeader) for direct unit testing
 
 ### Pending Todos
 
@@ -77,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T21:03:48.240Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-core-bridge/02-CONTEXT.md
+Last session: 2026-03-13T21:47:41Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-core-bridge/02-01-SUMMARY.md

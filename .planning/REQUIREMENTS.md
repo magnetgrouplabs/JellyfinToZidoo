@@ -17,19 +17,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can authenticate with Jellyfin server using API key
+- [x] **AUTH-01**: User can authenticate with Jellyfin server using API key
 - [ ] **AUTH-02**: User can authenticate with Jellyfin server using username/password
-- [ ] **AUTH-03**: Credentials stored securely using Android Keystore
-- [ ] **AUTH-04**: Auth token persists across app restarts
+- [x] **AUTH-03**: Credentials stored securely using Android Keystore
+- [x] **AUTH-04**: Auth token persists across app restarts
 
 ### Core Bridge
 
 - [ ] **BRDG-01**: App intercepts ACTION_VIEW intents for video MIME types from Jellyfin clients
-- [ ] **BRDG-02**: App extracts item ID from Jellyfin HTTP streaming URL
-- [ ] **BRDG-03**: App resolves server-side file path via Jellyfin API (/Items/{id}?Fields=Path,MediaSources)
+- [x] **BRDG-02**: App extracts item ID from Jellyfin HTTP streaming URL
+- [x] **BRDG-03**: App resolves server-side file path via Jellyfin API (/Items/{id}?Fields=Path,MediaSources)
 - [ ] **BRDG-04**: App applies path substitution to convert server path to SMB URI
 - [ ] **BRDG-05**: App launches native Zidoo player with SMB path
-- [ ] **BRDG-06**: App passes resume position to Zidoo player on launch (converting Jellyfin ticks to ms)
+- [x] **BRDG-06**: App passes resume position to Zidoo player on launch (converting Jellyfin ticks to ms)
 
 ### Playback Lifecycle
 
@@ -103,16 +103,16 @@ Deferred to future release. Tracked but not in current roadmap.
 | FORK-03 | Phase 1 | Complete |
 | FORK-04 | Phase 1 | Complete |
 | FORK-05 | Phase 1 | Complete |
-| AUTH-01 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Complete |
+| AUTH-04 | Phase 2 | Complete |
 | BRDG-01 | Phase 2 | Pending |
-| BRDG-02 | Phase 2 | Pending |
-| BRDG-03 | Phase 2 | Pending |
+| BRDG-02 | Phase 2 | Complete |
+| BRDG-03 | Phase 2 | Complete |
 | BRDG-04 | Phase 2 | Pending |
 | BRDG-05 | Phase 2 | Pending |
-| BRDG-06 | Phase 2 | Pending |
+| BRDG-06 | Phase 2 | Complete |
 | PLAY-01 | Phase 3 | Pending |
 | PLAY-02 | Phase 3 | Pending |
 | PLAY-03 | Phase 3 | Pending |
