@@ -33,12 +33,33 @@ public class JellyfinApi {
             Pattern.CASE_INSENSITIVE
     );
 
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .build();
+    private static volatile OkHttpClient client;
+    private static volatile Handler mainHandler;
 
-    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static OkHttpClient getClient() {
+        if (client == null) {
+            synchronized (JellyfinApi.class) {
+                if (client == null) {
+                    client = new OkHttpClient.Builder()
+                            .connectTimeout(10, TimeUnit.SECONDS)
+                            .readTimeout(10, TimeUnit.SECONDS)
+                            .build();
+                }
+            }
+        }
+        return client;
+    }
+
+    private static Handler getMainHandler() {
+        if (mainHandler == null) {
+            synchronized (JellyfinApi.class) {
+                if (mainHandler == null) {
+                    mainHandler = new Handler(Looper.getMainLooper());
+                }
+            }
+        }
+        return mainHandler;
+    }
 
     /**
      * Callback for getItem() responses.
@@ -182,11 +203,11 @@ public class JellyfinApi {
                 .addHeader("Authorization", buildAuthHeader(apiKey))
                 .build();
 
-        client.newCall(request).enqueue(new okhttp3.Callback() {
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "getItem failed", e);
-                mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
+                getMainHandler().post(() -> callback.onError("Network error: " + e.getMessage()));
             }
 
             @Override
@@ -194,17 +215,17 @@ public class JellyfinApi {
                 try {
                     if (!response.isSuccessful()) {
                         final String msg = "HTTP error " + response.code();
-                        mainHandler.post(() -> callback.onError(msg));
+                        getMainHandler().post(() -> callback.onError(msg));
                         return;
                     }
 
                     String body = response.body() != null ? response.body().string() : "";
                     ItemResult result = parseItemResponse(body);
-                    mainHandler.post(() -> callback.onSuccess(result.path, result.positionTicks, result.title));
+                    getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title));
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to parse item response", e);
                     final String msg = "Parse error: " + e.getMessage();
-                    mainHandler.post(() -> callback.onError(msg));
+                    getMainHandler().post(() -> callback.onError(msg));
                 } finally {
                     response.close();
                 }
@@ -229,11 +250,11 @@ public class JellyfinApi {
                 .addHeader("Authorization", buildAuthHeader(apiKey))
                 .build();
 
-        client.newCall(request).enqueue(new okhttp3.Callback() {
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "testConnection failed", e);
-                mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
+                getMainHandler().post(() -> callback.onError("Network error: " + e.getMessage()));
             }
 
             @Override
@@ -241,7 +262,7 @@ public class JellyfinApi {
                 try {
                     if (!response.isSuccessful()) {
                         final String msg = "HTTP error " + response.code();
-                        mainHandler.post(() -> callback.onError(msg));
+                        getMainHandler().post(() -> callback.onError(msg));
                         return;
                     }
 
@@ -252,11 +273,11 @@ public class JellyfinApi {
                         serverName = root.get("ServerName").getAsString();
                     }
                     final String name = serverName;
-                    mainHandler.post(() -> callback.onSuccess("Connected to " + name));
+                    getMainHandler().post(() -> callback.onSuccess("Connected to " + name));
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to parse system info", e);
                     final String msg = "Parse error: " + e.getMessage();
-                    mainHandler.post(() -> callback.onError(msg));
+                    getMainHandler().post(() -> callback.onError(msg));
                 } finally {
                     response.close();
                 }
