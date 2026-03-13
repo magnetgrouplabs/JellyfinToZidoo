@@ -1,0 +1,150 @@
+# Requirements: JellyfinToZidoo
+
+**Defined:** 2026-03-13
+**Core Value:** When a user plays media through a Jellyfin client on a Zidoo device, the native Zidoo player handles playback with full hardware decode, and watch state syncs seamlessly back to Jellyfin.
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Fork & Setup
+
+- [x] **FORK-01**: Fork PlexToZidoo, rename package to com.jellyfintozidoo
+- [x] **FORK-02**: Rename app to JellyfinToZidoo throughout (strings, manifest, branding)
+- [ ] **FORK-03**: Preserve attribution to PlexToZidoo/bowlingbeeg in README and license
+- [x] **FORK-04**: Strip all Plex API imports and calls
+- [ ] **FORK-05**: Project builds cleanly after rename and Plex removal
+
+### Authentication
+
+- [ ] **AUTH-01**: User can authenticate with Jellyfin server using API key
+- [ ] **AUTH-02**: User can authenticate with Jellyfin server using username/password
+- [ ] **AUTH-03**: Credentials stored securely using Android Keystore
+- [ ] **AUTH-04**: Auth token persists across app restarts
+
+### Core Bridge
+
+- [ ] **BRDG-01**: App intercepts ACTION_VIEW intents for video MIME types from Jellyfin clients
+- [ ] **BRDG-02**: App extracts item ID from Jellyfin HTTP streaming URL
+- [ ] **BRDG-03**: App resolves server-side file path via Jellyfin API (/Items/{id}?Fields=Path,MediaSources)
+- [ ] **BRDG-04**: App applies path substitution to convert server path to SMB URI
+- [ ] **BRDG-05**: App launches native Zidoo player with SMB path
+- [ ] **BRDG-06**: App passes resume position to Zidoo player on launch (converting Jellyfin ticks to ms)
+
+### Playback Lifecycle
+
+- [ ] **PLAY-01**: App reports playback start to Jellyfin (POST /Sessions/Playing)
+- [ ] **PLAY-02**: App reports playback progress periodically (POST /Sessions/Playing/Progress)
+- [ ] **PLAY-03**: App reports playback stopped with final position (POST /Sessions/Playing/Stopped)
+- [ ] **PLAY-04**: Resume position written back to Jellyfin on playback stop
+- [ ] **PLAY-05**: Media marked as watched when ≥90% played
+- [ ] **PLAY-06**: App relaunches originating Jellyfin client after playback ends (Zidoo 2-app limit workaround)
+
+### Settings
+
+- [ ] **SETT-01**: User can configure Jellyfin server URL
+- [ ] **SETT-02**: User can configure API key or username/password credentials
+- [ ] **SETT-03**: User can configure path substitution rule (find/replace)
+- [ ] **SETT-04**: User can configure multiple path substitution rules
+- [ ] **SETT-05**: User can configure SMB username/password (optional)
+- [ ] **SETT-06**: User can toggle debug screen on/off
+- [ ] **SETT-07**: Settings UI is D-pad navigable (Android TV / Leanback compatible)
+- [ ] **SETT-08**: User can import/export settings as JSON
+
+### Debug
+
+- [ ] **DEBG-01**: Debug screen shows parsed intent data (URI, extras, item ID)
+- [ ] **DEBG-02**: Debug screen shows resolved file path from Jellyfin API
+- [ ] **DEBG-03**: Debug screen shows substituted SMB path
+- [ ] **DEBG-04**: Debug screen has manual Play button to launch Zidoo player
+
+### Episode Intelligence
+
+- [ ] **EPIS-01**: App detects when user navigates to a different episode in Zidoo player (via getPlayStatus path changes)
+- [ ] **EPIS-02**: Each episode navigated to in Zidoo player gets its watched status reported to Jellyfin
+- [ ] **EPIS-03**: App auto-launches next episode after current episode finishes
+- [ ] **EPIS-04**: App handles season boundaries for next episode resolution
+
+### Advanced Playback
+
+- [ ] **ADVP-01**: App skips intros using Jellyfin Intro Skipper plugin data
+- [ ] **ADVP-02**: App stops or advances at credits using Intro Skipper outro data
+- [ ] **ADVP-03**: App passes audio stream selection to Zidoo player
+- [ ] **ADVP-04**: App passes subtitle stream selection to Zidoo player
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Multi-User
+
+- **MUSR-01**: Support multiple Jellyfin user profiles on same device
+
+### Protocol
+
+- **PROT-01**: NFS path support in addition to SMB
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Built-in media browsing / Jellyfin client UI | Bridge app, not a client. Use existing Jellyfin clients for browsing. |
+| Transcoding / HTTP streaming fallback | Defeats the purpose — hardware decode via SMB is the whole point |
+| Chromecast / DLNA support | Different playback paradigm, native Zidoo player only |
+| Kotlin conversion | Staying Java for PlexToZidoo community continuity |
+| Local intro/credit detection | Server plugin's job, we only consume timestamps |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FORK-01 | Phase 1 | Complete |
+| FORK-02 | Phase 1 | Complete |
+| FORK-03 | Phase 1 | Pending |
+| FORK-04 | Phase 1 | Complete |
+| FORK-05 | Phase 1 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| BRDG-01 | Phase 2 | Pending |
+| BRDG-02 | Phase 2 | Pending |
+| BRDG-03 | Phase 2 | Pending |
+| BRDG-04 | Phase 2 | Pending |
+| BRDG-05 | Phase 2 | Pending |
+| BRDG-06 | Phase 2 | Pending |
+| PLAY-01 | Phase 3 | Pending |
+| PLAY-02 | Phase 3 | Pending |
+| PLAY-03 | Phase 3 | Pending |
+| PLAY-04 | Phase 3 | Pending |
+| PLAY-05 | Phase 3 | Pending |
+| PLAY-06 | Phase 3 | Pending |
+| SETT-01 | Phase 2 | Pending |
+| SETT-02 | Phase 2 | Pending |
+| SETT-03 | Phase 2 | Pending |
+| SETT-04 | Phase 4 | Pending |
+| SETT-05 | Phase 2 | Pending |
+| SETT-06 | Phase 2 | Pending |
+| SETT-07 | Phase 2 | Pending |
+| SETT-08 | Phase 5 | Pending |
+| DEBG-01 | Phase 2 | Pending |
+| DEBG-02 | Phase 2 | Pending |
+| DEBG-03 | Phase 2 | Pending |
+| DEBG-04 | Phase 2 | Pending |
+| EPIS-01 | Phase 4 | Pending |
+| EPIS-02 | Phase 4 | Pending |
+| EPIS-03 | Phase 4 | Pending |
+| EPIS-04 | Phase 4 | Pending |
+| ADVP-01 | Phase 5 | Pending |
+| ADVP-02 | Phase 5 | Pending |
+| ADVP-03 | Phase 5 | Pending |
+| ADVP-04 | Phase 5 | Pending |
+
+**Coverage:**
+- v1 requirements: 41 total
+- Mapped to phases: 41
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-03-13*
+*Last updated: 2026-03-13 after initial definition*
