@@ -11,9 +11,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **FORK-01**: Fork PlexToZidoo, rename package to com.jellyfintozidoo
 - [x] **FORK-02**: Rename app to JellyfinToZidoo throughout (strings, manifest, branding)
-- [ ] **FORK-03**: Preserve attribution to PlexToZidoo/bowlingbeeg in README and license
+- [x] **FORK-03**: Preserve attribution to PlexToZidoo/bowlingbeeg in README and license
 - [x] **FORK-04**: Strip all Plex API imports and calls
-- [ ] **FORK-05**: Project builds cleanly after rename and Plex removal
+- [x] **FORK-05**: Project builds cleanly after rename and Plex removal
 
 ### Authentication
 
@@ -100,9 +100,9 @@ Deferred to future release. Tracked but not in current roadmap.
 |-------------|-------|--------|
 | FORK-01 | Phase 1 | Complete |
 | FORK-02 | Phase 1 | Complete |
-| FORK-03 | Phase 1 | Pending |
+| FORK-03 | Phase 1 | Complete |
 | FORK-04 | Phase 1 | Complete |
-| FORK-05 | Phase 1 | Pending |
+| FORK-05 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |

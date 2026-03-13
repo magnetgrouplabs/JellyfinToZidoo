@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-13T16:34:00Z"
-last_activity: 2026-03-13 -- Plan 01-01 executed (fork and rename)
+stopped_at: Completed 01-02-PLAN.md (Phase 1 complete)
+last_updated: "2026-03-13T18:14:00Z"
+last_activity: 2026-03-13 -- Plan 01-02 executed (build, CI, attribution, icon, device verify)
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 100
 ---
 
 # Project State
@@ -25,25 +25,25 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 
 ## Current Position
 
-Phase: 1 of 5 (Fork Setup)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-03-13 -- Plan 01-01 executed (fork and rename)
+Phase: 1 of 5 (Fork Setup) -- COMPLETE
+Plan: 2 of 2 in current phase (all done)
+Status: Phase 1 Complete
+Last activity: 2026-03-13 -- Plan 01-02 executed (build, CI, attribution, icon, device verify)
 
-Progress: [█████░░░░░] 50%
+Progress: [██████████] 100% (Phase 1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 8 min
-- Total execution time: 0.13 hours
+- Total plans completed: 2
+- Average duration: 27 min
+- Total execution time: 0.88 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-fork-setup | 1 | 8 min | 8 min |
+| 01-fork-setup | 2 | 53 min | 27 min |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -62,6 +62,10 @@ Recent decisions affecting current work:
 - Roadmap: Phase 2 bundles auth + bridge + settings + debug (all needed for first testable flow)
 - 01-01: Updated compileSdkVersion to 36 and buildToolsVersion to 36.0.0 for local SDK compatibility
 - 01-01: Added fallback doSubstitution path in Play.java for non-ZDMC intents after Plex code removal
+- 01-02: Upgraded AGP 4.1.3 to 8.2.2 and Gradle 6.5 to 8.5 for JDK 17+ compatibility
+- 01-02: Replaced jcenter() with mavenCentral() (jcenter sunset)
+- 01-02: App icon: gradient purple-to-blue outline triangle with solid blue inner (Jellyfin palette)
+- 01-02: CI uses JDK 17 temurin to match AGP 8.2.2 requirements
 
 ### Pending Todos
 
@@ -73,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T16:34:00Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-fork-setup/01-01-SUMMARY.md
+Last session: 2026-03-13T18:14:00Z
+Stopped at: Completed 01-02-PLAN.md (Phase 1 complete)
+Resume file: .planning/phases/01-fork-setup/01-02-SUMMARY.md

@@ -12,7 +12,7 @@ JellyfinToZidoo is a fork of PlexToZidoo that replaces the Plex API layer with J
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Fork Setup** - Clean fork with package rename, Plex removal, and verified build
+- [x] **Phase 1: Fork Setup** - Clean fork with package rename, Plex removal, and verified build
 - [ ] **Phase 2: Core Bridge** - End-to-end intent interception through Zidoo player launch with auth, settings, and debug
 - [ ] **Phase 3: Playback Lifecycle** - Bidirectional playback reporting and watch state sync with Jellyfin
 - [ ] **Phase 4: Episode Intelligence** - Seamless multi-episode tracking when navigating within Zidoo player
@@ -28,11 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Project builds successfully as com.jellyfintozidoo with zero Plex imports or references
   2. App installs on a Zidoo device alongside PlexToZidoo without conflict
   3. README and license credit PlexToZidoo/bowlingbeeg as the upstream fork
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 
 Plans:
-- [ ] 01-01-PLAN.md — Clone PlexToZidoo, rename package, comment out Plex code, update strings
-- [ ] 01-02-PLAN.md — Build verification, attribution, CI setup, app icon, device deploy
+- [x] 01-01-PLAN.md -- Clone PlexToZidoo, rename package, comment out Plex code, update strings
+- [x] 01-02-PLAN.md -- Build verification, attribution, CI setup, app icon, device deploy
 
 ### Phase 2: Core Bridge
 **Goal**: User can play media from a Jellyfin client and have it launch in the native Zidoo player at the correct resume position
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Fork Setup | 1/2 | In Progress|  |
+| 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
 | 2. Core Bridge | 0/4 | Not started | - |
 | 3. Playback Lifecycle | 0/3 | Not started | - |
 | 4. Episode Intelligence | 0/3 | Not started | - |
