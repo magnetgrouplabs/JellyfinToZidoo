@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 public class SettingsActivity extends AppCompatActivity
 {
-    private final String backupFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/PlexToZidooSettings.txt";
+    private final String backupFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/JellyfinToZidooSettings.txt";
     private static SettingsFragment settingsFragment;
     private static String settingsRootKey;
     private static String scrollToPreference;

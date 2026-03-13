@@ -38,6 +38,8 @@
 
     </PreferenceCategory>
 
+    <!-- PLEX_REMOVED_START - Plex library include/exclude preferences (Plex-specific library selection) -->
+    <!--
     <PreferenceCategory app:title="@string/plex_settings">
 
         <EditTextPreference
@@ -53,6 +55,8 @@
             app:useSimpleSummaryProvider="true" />
 
     </PreferenceCategory>
+    -->
+    <!-- PLEX_REMOVED_END -->
 
     <PreferenceCategory app:title="@string/substitution_settings">
 
