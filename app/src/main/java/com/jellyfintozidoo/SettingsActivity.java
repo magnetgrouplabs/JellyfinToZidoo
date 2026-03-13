@@ -1,4 +1,4 @@
-package com.hpn789.plextozidoo;
+package com.jellyfintozidoo;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
