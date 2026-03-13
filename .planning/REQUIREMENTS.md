@@ -24,11 +24,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Core Bridge
 
-- [ ] **BRDG-01**: App intercepts ACTION_VIEW intents for video MIME types from Jellyfin clients
+- [x] **BRDG-01**: App intercepts ACTION_VIEW intents for video MIME types from Jellyfin clients
 - [x] **BRDG-02**: App extracts item ID from Jellyfin HTTP streaming URL
 - [x] **BRDG-03**: App resolves server-side file path via Jellyfin API (/Items/{id}?Fields=Path,MediaSources)
-- [ ] **BRDG-04**: App applies path substitution to convert server path to SMB URI
-- [ ] **BRDG-05**: App launches native Zidoo player with SMB path
+- [x] **BRDG-04**: App applies path substitution to convert server path to SMB URI
+- [x] **BRDG-05**: App launches native Zidoo player with SMB path
 - [x] **BRDG-06**: App passes resume position to Zidoo player on launch (converting Jellyfin ticks to ms)
 
 ### Playback Lifecycle
@@ -53,10 +53,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Debug
 
-- [ ] **DEBG-01**: Debug screen shows parsed intent data (URI, extras, item ID)
-- [ ] **DEBG-02**: Debug screen shows resolved file path from Jellyfin API
-- [ ] **DEBG-03**: Debug screen shows substituted SMB path
-- [ ] **DEBG-04**: Debug screen has manual Play button to launch Zidoo player
+- [x] **DEBG-01**: Debug screen shows parsed intent data (URI, extras, item ID)
+- [x] **DEBG-02**: Debug screen shows resolved file path from Jellyfin API
+- [x] **DEBG-03**: Debug screen shows substituted SMB path
+- [x] **DEBG-04**: Debug screen has manual Play button to launch Zidoo player
 
 ### Episode Intelligence
 
@@ -107,11 +107,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | AUTH-02 | Phase 2 | Complete |
 | AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Complete |
-| BRDG-01 | Phase 2 | Pending |
+| BRDG-01 | Phase 2 | Complete |
 | BRDG-02 | Phase 2 | Complete |
 | BRDG-03 | Phase 2 | Complete |
-| BRDG-04 | Phase 2 | Pending |
-| BRDG-05 | Phase 2 | Pending |
+| BRDG-04 | Phase 2 | Complete |
+| BRDG-05 | Phase 2 | Complete |
 | BRDG-06 | Phase 2 | Complete |
 | PLAY-01 | Phase 3 | Pending |
 | PLAY-02 | Phase 3 | Pending |
@@ -127,10 +127,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | SETT-06 | Phase 2 | Complete |
 | SETT-07 | Phase 2 | Complete |
 | SETT-08 | Phase 5 | Pending |
-| DEBG-01 | Phase 2 | Pending |
-| DEBG-02 | Phase 2 | Pending |
-| DEBG-03 | Phase 2 | Pending |
-| DEBG-04 | Phase 2 | Pending |
+| DEBG-01 | Phase 2 | Complete |
+| DEBG-02 | Phase 2 | Complete |
+| DEBG-03 | Phase 2 | Complete |
+| DEBG-04 | Phase 2 | Complete |
 | EPIS-01 | Phase 4 | Pending |
 | EPIS-02 | Phase 4 | Pending |
 | EPIS-03 | Phase 4 | Pending |

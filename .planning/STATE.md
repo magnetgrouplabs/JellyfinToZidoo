@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-03-13T21:53:53.419Z"
-last_activity: 2026-03-13 -- Plan 02-02 executed (Settings UI with secure API key storage)
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-03-13T21:59:22.077Z"
+last_activity: 2026-03-13 -- Plan 02-03 executed (Jellyfin API bridge pipeline in Play.java)
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
-  percent: 67
+  completed_plans: 5
+  percent: 83
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 ## Current Position
 
 Phase: 2 of 5 (Core Bridge) -- IN PROGRESS
-Plan: 2 of 4 in current phase
-Status: Plan 02-02 complete, continuing to 02-03
-Last activity: 2026-03-13 -- Plan 02-02 executed (Settings UI with secure API key storage)
+Plan: 3 of 4 in current phase
+Status: Plan 02-03 complete, continuing to 02-04
+Last activity: 2026-03-13 -- Plan 02-03 executed (Jellyfin API bridge pipeline in Play.java)
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [███████░░░] 67%
 - Trend: improving
 
 *Updated after each plan completion*
+| Phase 02-core-bridge P03 | 2 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,8 @@ Recent decisions affecting current work:
 - 02-01: Lazy init pattern for static Android-dependent fields (OkHttpClient, Handler) for unit test compatibility
 - 02-01: Package-private test helpers (parseItemResponse, buildAuthHeader) for direct unit testing
 - [Phase 02]: API key preference returns false from OnPreferenceChangeListener to redirect writes to SecureStorage
+- [Phase 02-core-bridge]: Intent position (ms) takes priority over API ticks for resume position
+- [Phase 02-core-bridge]: Non-Jellyfin URLs fall through to direct substitution for backward compatibility
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T21:53:53.417Z
-Stopped at: Completed 02-02-PLAN.md
-Resume file: .planning/phases/02-core-bridge/02-02-SUMMARY.md
+Last session: 2026-03-13T21:59:22.074Z
+Stopped at: Completed 02-03-PLAN.md
+Resume file: .planning/phases/02-core-bridge/02-03-SUMMARY.md
