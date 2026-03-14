@@ -49,7 +49,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SETT-05**: User can configure SMB username/password (optional)
 - [x] **SETT-06**: User can toggle debug screen on/off
 - [x] **SETT-07**: Settings UI is D-pad navigable (Android TV / Leanback compatible)
-- [ ] **SETT-08**: User can import/export settings as JSON
+- [x] **SETT-08**: User can import/export settings as JSON
 
 ### Debug
 
@@ -67,10 +67,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Advanced Playback
 
-- [ ] **ADVP-01**: App skips intros using Jellyfin Intro Skipper plugin data
-- [ ] **ADVP-02**: App stops or advances at credits using Intro Skipper outro data
-- [ ] **ADVP-03**: App passes audio stream selection to Zidoo player
-- [ ] **ADVP-04**: App passes subtitle stream selection to Zidoo player
+- [x] **ADVP-01**: App skips intros using Jellyfin Intro Skipper plugin data
+- [x] **ADVP-02**: App stops or advances at credits using Intro Skipper outro data
+- [x] **ADVP-03**: App passes audio stream selection to Zidoo player
+- [x] **ADVP-04**: App passes subtitle stream selection to Zidoo player
 
 ## v2 Requirements
 
@@ -126,7 +126,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SETT-05 | Phase 2 | Complete |
 | SETT-06 | Phase 2 | Complete |
 | SETT-07 | Phase 2 | Complete |
-| SETT-08 | Phase 5 | Pending |
+| SETT-08 | Phase 5 | Complete |
 | DEBG-01 | Phase 2 | Complete |
 | DEBG-02 | Phase 2 | Complete |
 | DEBG-03 | Phase 2 | Complete |
@@ -135,10 +135,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | EPIS-02 | Phase 4 | Complete |
 | EPIS-03 | Phase 4 | Complete |
 | EPIS-04 | Phase 4 | Complete |
-| ADVP-01 | Phase 5 | Pending |
-| ADVP-02 | Phase 5 | Pending |
-| ADVP-03 | Phase 5 | Pending |
-| ADVP-04 | Phase 5 | Pending |
+| ADVP-01 | Phase 5 | Complete |
+| ADVP-02 | Phase 5 | Complete |
+| ADVP-03 | Phase 5 | Complete |
+| ADVP-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 41 total

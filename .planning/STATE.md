@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-14T18:15:36.094Z"
-last_activity: 2026-03-14 -- Committed bug fixes, wrote 04-03-SUMMARY.md
+status: in-progress
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-14T19:09:00Z"
+last_activity: 2026-03-14 -- Completed 05-01 TDD parsing logic
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 12
-  completed_plans: 12
-  percent: 96
+  total_plans: 15
+  completed_plans: 13
+  percent: 87
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** Native Zidoo playback of Jellyfin media with seamless watch state sync
-**Current focus:** Phase 4 complete, Phase 5 (Advanced Playback) next
+**Current focus:** Phase 5 (Advanced Playback) in progress
 
 ## Current Position
 
-Phase: 4 of 5 (Episode Intelligence) -- COMPLETE
-Plan: 3 of 3 -- COMPLETE
-Status: Phase 4 done, ready for Phase 5
-Last activity: 2026-03-14 -- Committed bug fixes, wrote 04-03-SUMMARY.md
+Phase: 5 of 5 (Advanced Playback)
+Plan: 1 of 3 -- COMPLETE
+Status: Plan 05-01 done, ready for 05-02
+Last activity: 2026-03-14 -- Completed 05-01 TDD parsing logic
 
-Progress: [█████████░] 96%
+Progress: [█████████░] 87%
 
 ## Performance Metrics
 
@@ -49,6 +49,8 @@ Progress: [█████████░] 96%
 | Phase 04 P01 | 4min | 2 tasks | 3 files |
 | Phase 04 P02 | 3min | 2 tasks | 6 files |
 | Phase 04 P03 | multi-session | 3 tasks | 9 files |
+| 05-advanced-playback | 1/3 | In Progress |
+| Phase 05 P01 | 6min | 3 features (TDD) | 5 files |
 
 ## Accumulated Context
 
@@ -77,6 +79,9 @@ Progress: [█████████░] 96%
 - finishWithResult() sets result intent with current jellyfinItemId so Jellyfin client can navigate to last-played episode
 - Stop-before-end approach: finishActivity(98) at ~30s remaining replaces poller-side per-episode tracking
 - Adaptive polling: self-rescheduling 3s in final 60s, 10s otherwise
+- parseUrlParam uses simple string parsing (not android.net.Uri) for unit test compatibility
+- findDefaultStreamIndex checks both IsDefault and IsForced in single pass
+- Extracted buildExportJson as static method from SettingsActivity for testability
 
 ### Pending Todos
 
@@ -88,6 +93,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T18:15:36.092Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-advanced-playback/05-CONTEXT.md
+Last session: 2026-03-14T19:09:00Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: .planning/phases/05-advanced-playback/05-01-SUMMARY.md
