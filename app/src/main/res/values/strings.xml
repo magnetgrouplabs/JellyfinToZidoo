@@ -37,6 +37,8 @@
     <string name="smbUsername_title">Smb username (if needed)</string>
     <string name="smbPassword_title">Smb password (if needed)</string>
     <string name="substitution_link">Add additional substitutions</string>
+    <string name="substitution_rule_2_title">Path Substitution Rule 2 (optional)</string>
+    <string name="substitution_link_more">More Substitution Rules (3-10)...</string>
     <!-- Import/Export -->
     <string name="import_export_description">Settings are imported/exported using the file JellyfinToZidooSettings.txt in the Download directory\nNOTE: These will not import/export your password</string>
     <string name="import_button_title">Import</string>
