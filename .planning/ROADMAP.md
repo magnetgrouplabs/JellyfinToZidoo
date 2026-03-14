@@ -93,12 +93,12 @@ Plans:
   2. Playback stops or advances at credits using Intro Skipper outro timestamps
   3. Audio and subtitle track selections from the Jellyfin client are applied in the Zidoo player
   4. User can export settings to JSON and import them on another device
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md -- TDD: IntroSkipper response parsing, MediaStream index mapping, URL param extraction
+- [ ] 05-02-PLAN.md -- Play.java integration: intro/credit skip in poller, audio/subtitle passthrough, settings toggles
+- [ ] 05-03-PLAN.md -- Settings export/import fix (token exclusion, auto-login), device deploy + E2E verification
 
 ## Progress
 
