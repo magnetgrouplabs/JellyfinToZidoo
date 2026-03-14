@@ -125,6 +125,63 @@ public class JellyfinApi {
         }
     }
 
+    /**
+     * Result object for parsed IntroSkipper segment responses. Package-private for testability.
+     * Fields store timestamps in seconds; use convenience methods for milliseconds.
+     * A value of -1 means the segment is not present or not valid.
+     */
+    static class IntroSkipperResult {
+        final double introStartSec;
+        final double introEndSec;
+        final double creditStartSec;
+        final double creditEndSec;
+
+        IntroSkipperResult(double introStartSec, double introEndSec,
+                           double creditStartSec, double creditEndSec) {
+            this.introStartSec = introStartSec;
+            this.introEndSec = introEndSec;
+            this.creditStartSec = creditStartSec;
+            this.creditEndSec = creditEndSec;
+        }
+
+        long introStartMs() { return introStartSec < 0 ? -1 : (long) (introStartSec * 1000); }
+        long introEndMs() { return introEndSec < 0 ? -1 : (long) (introEndSec * 1000); }
+        long creditStartMs() { return creditStartSec < 0 ? -1 : (long) (creditStartSec * 1000); }
+        long creditEndMs() { return creditEndSec < 0 ? -1 : (long) (creditEndSec * 1000); }
+    }
+
+    /**
+     * Parses an IntroSkipper /Episode/{id}/IntroSkipperSegments JSON response.
+     * Returns an IntroSkipperResult with timestamps in seconds (-1 if not present/valid).
+     * Package-private for testability.
+     *
+     * @param jsonBody The raw JSON response body
+     * @return Parsed IntroSkipperResult
+     */
+    static IntroSkipperResult parseIntroSkipperResponse(String jsonBody) {
+        JsonObject root = JsonParser.parseString(jsonBody).getAsJsonObject();
+
+        double introStart = -1, introEnd = -1, creditStart = -1, creditEnd = -1;
+
+        if (root.has("Introduction")) {
+            JsonObject intro = root.getAsJsonObject("Introduction");
+            if (intro.has("Valid") && intro.get("Valid").getAsBoolean()) {
+                introStart = intro.get("IntroStart").getAsDouble();
+                introEnd = intro.get("IntroEnd").getAsDouble();
+            }
+        }
+
+        if (root.has("Credits")) {
+            JsonObject credits = root.getAsJsonObject("Credits");
+            if (credits.has("Valid") && credits.get("Valid").getAsBoolean()) {
+                creditStart = credits.get("IntroStart").getAsDouble();
+                creditEnd = credits.get("IntroEnd").getAsDouble();
+            }
+        }
+
+        return new IntroSkipperResult(introStart, introEnd, creditStart, creditEnd);
+    }
+
     private JellyfinApi() {
         // Prevent instantiation
     }
