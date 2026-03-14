@@ -13,7 +13,7 @@ JellyfinToZidoo is a fork of PlexToZidoo that replaces the Plex API layer with J
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Fork Setup** - Clean fork with package rename, Plex removal, and verified build
-- [ ] **Phase 2: Core Bridge** - End-to-end intent interception through Zidoo player launch with auth, settings, and debug
+- [x] **Phase 2: Core Bridge** - End-to-end intent interception through Zidoo player launch with auth, settings, and debug
 - [ ] **Phase 3: Playback Lifecycle** - Bidirectional playback reporting and watch state sync with Jellyfin
 - [ ] **Phase 4: Episode Intelligence** - Seamless multi-episode tracking when navigating within Zidoo player
 - [ ] **Phase 5: Advanced Playback** - Intro/credit skip, audio/subtitle passthrough, and settings portability
@@ -44,13 +44,13 @@ Plans:
   3. Playback resumes at the position stored in Jellyfin (ticks converted to milliseconds)
   4. Debug screen shows the full pipeline: raw intent data, resolved path, substituted SMB URI, with a manual Play button
   5. Auth token persists across app restarts without re-entering credentials
-**Plans:** 4 plans
+**Plans:** 4/4 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md -- JellyfinApi + SecureStorage foundation classes with unit tests
-- [ ] 02-02-PLAN.md -- Settings screen Jellyfin Server section with secure API key storage
-- [ ] 02-03-PLAN.md -- Play.java Jellyfin intent bridge integration and debug screen
-- [ ] 02-04-PLAN.md -- Device deploy and end-to-end verification checkpoint
+- [x] 02-01-PLAN.md -- JellyfinApi + SecureStorage foundation classes with unit tests
+- [x] 02-02-PLAN.md -- Settings screen Jellyfin Server section with secure API key storage
+- [x] 02-03-PLAN.md -- Play.java Jellyfin intent bridge integration and debug screen
+- [x] 02-04-PLAN.md -- Device deploy and end-to-end verification checkpoint
 
 ### Phase 3: Playback Lifecycle
 **Goal**: Jellyfin accurately reflects what the user watched, how far they got, and what to resume next
@@ -61,12 +61,12 @@ Plans:
   2. Stopping playback mid-movie saves the exact resume position in Jellyfin
   3. Watching 90% or more of a movie marks it as watched in Jellyfin
   4. After playback ends, the originating Jellyfin client relaunches (Zidoo 2-app limit workaround)
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md -- TDD: msToTicks, playback JSON body builders, isWatched threshold, RunTimeTicks parsing, async reporting methods
+- [ ] 03-02-PLAN.md -- Play.java integration: caller capture, playback start reporting, Zidoo progress poller, onActivityResult stop/watched/relaunch
+- [ ] 03-03-PLAN.md -- Device deploy and E2E verification checkpoint
 
 ### Phase 4: Episode Intelligence
 **Goal**: Users can binge TV shows by navigating episodes directly in the Zidoo player, with every episode's watch status correctly synced to Jellyfin
@@ -108,7 +108,7 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
-| 2. Core Bridge | 0/4 | Planned | - |
-| 3. Playback Lifecycle | 0/3 | Not started | - |
+| 2. Core Bridge | 4/4 | Complete | 2026-03-13 |
+| 3. Playback Lifecycle | 0/3 | In progress | - |
 | 4. Episode Intelligence | 0/3 | Not started | - |
 | 5. Advanced Playback | 0/3 | Not started | - |
