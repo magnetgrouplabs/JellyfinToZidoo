@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-14T14:24:47.651Z"
-last_activity: 2026-03-14 -- Phase 4 Plan 1 TDD complete, core logic tested
+stopped_at: 04-03 Task 3 device debugging — bugs fixed, user confirmed working
+last_updated: "2026-03-14T17:17:52.850Z"
+last_activity: 2026-03-14 -- Fixed 3 critical Up Next bugs, flow verified on device
 progress:
   total_phases: 5
   completed_phases: 3
@@ -26,10 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 ## Current Position
 
 Phase: 4 of 5 (Episode Intelligence)
-Plan: 2 of 3 -- COMPLETE
-Next: Plan 3 (Play.java integration wiring)
+Plan: 3 of 3 -- IN PROGRESS (task 3: device verification, bugs fixed, needs commit)
 Status: Executing Phase 4
-Last activity: 2026-03-14 -- UpNextActivity + API network methods complete
+Last activity: 2026-03-14 -- Fixed onStart re-init, stale result, directPath race bugs
 
 Progress: [█████████░] 92%
 
@@ -73,6 +72,10 @@ Progress: [█████████░] 92%
 - [Phase 04]: parseSearchByPathResponse checks both root Path and MediaSources[0].Path for match
 - [Phase 04]: Glide BlurTransformation sampling=3 radius=25 for Zidoo memory-safe backdrop blur
 - [Phase 04]: CountDownTimer guarded by cancelled flag and canceled in onDestroy to prevent zombie launches
+- [Phase 04]: onStart() guard — skip re-init when handlingPlaybackResult or waitingForUpNext (prevents auto-replay between episodes)
+- [Phase 04]: Stale onActivityResult(98) guard — if handlingPlaybackResult already true, ignore duplicate Zidoo results
+- [Phase 04]: Capture resolvedSmbPath as local final var before async callbacks (prevents onStart overwriting directPath)
+- [Phase 04]: finishWithResult() sets result intent with current jellyfinItemId so Jellyfin client can navigate to last-played episode
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T14:28:45Z
-Stopped at: Completed 04-02-PLAN.md
-Resume file: None
+Last session: 2026-03-14T17:17:52Z
+Stopped at: 04-03 Task 3 bugs fixed and verified, needs commit + summary
+Resume file: .planning/phases/04-episode-intelligence/.continue-here.md
