@@ -67,7 +67,7 @@
         </activity>
         <activity
             android:name=".UpNextActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:theme="@style/Theme.JellyfinToZidoo.UpNext"
             android:exported="false" />
     </application>
 
