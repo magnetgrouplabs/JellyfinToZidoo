@@ -67,7 +67,7 @@ public class JellyfinApi {
      * Callback for getItem() responses.
      */
     public interface Callback {
-        void onSuccess(String serverPath, long positionTicks, String title, long durationTicks);
+        void onSuccess(String serverPath, long positionTicks, String title, long durationTicks, String seriesId);
         void onError(String error);
     }
 
@@ -87,12 +87,14 @@ public class JellyfinApi {
         final long positionTicks;
         final String title;
         final long durationTicks;
+        final String seriesId;
 
-        ItemResult(String path, long positionTicks, String title, long durationTicks) {
+        ItemResult(String path, long positionTicks, String title, long durationTicks, String seriesId) {
             this.path = path;
             this.positionTicks = positionTicks;
             this.title = title;
             this.durationTicks = durationTicks;
+            this.seriesId = seriesId;
         }
     }
 
@@ -254,7 +256,13 @@ public class JellyfinApi {
             durationTicks = root.get("RunTimeTicks").getAsLong();
         }
 
-        return new ItemResult(path, positionTicks, title, durationTicks);
+        // Extract SeriesId (present for episodes)
+        String seriesId = null;
+        if (root.has("SeriesId") && !root.get("SeriesId").isJsonNull()) {
+            seriesId = root.get("SeriesId").getAsString();
+        }
+
+        return new ItemResult(path, positionTicks, title, durationTicks, seriesId);
     }
 
     /**
@@ -294,7 +302,7 @@ public class JellyfinApi {
 
                     String body = response.body() != null ? response.body().string() : "";
                     ItemResult result = parseItemResponse(body);
-                    getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title, result.durationTicks));
+                    getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title, result.durationTicks, result.seriesId));
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to parse item response", e);
                     final String msg = "Parse error: " + e.getMessage();
@@ -471,6 +479,63 @@ public class JellyfinApi {
                 .build();
 
         enqueueSimpleRequest(request, "markAsWatched", callback);
+    }
+
+    /**
+     * Callback for getNextUp() — returns the next episode's item ID, or null if none.
+     */
+    public interface NextUpCallback {
+        void onResult(String nextItemId);
+    }
+
+    /**
+     * Queries Jellyfin for the next unwatched episode in a series.
+     * Jellyfin equivalent of PlexToZidoo's searchFiles().
+     */
+    public static void getNextUp(String serverUrl, String apiKey, String seriesId,
+                                  NextUpCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Shows/NextUp?seriesId=" + seriesId + "&limit=1";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .build();
+
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.w(TAG, "getNextUp failed: " + e.getMessage());
+                getMainHandler().post(() -> callback.onResult(null));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        getMainHandler().post(() -> callback.onResult(null));
+                        return;
+                    }
+                    String body = response.body().string();
+                    JsonObject root = JsonParser.parseString(body).getAsJsonObject();
+                    if (root.has("Items") && root.get("Items").isJsonArray()) {
+                        JsonArray items = root.getAsJsonArray("Items");
+                        if (items.size() > 0) {
+                            JsonObject nextItem = items.get(0).getAsJsonObject();
+                            String nextId = nextItem.has("Id") ? nextItem.get("Id").getAsString() : null;
+                            getMainHandler().post(() -> callback.onResult(nextId));
+                            return;
+                        }
+                    }
+                    getMainHandler().post(() -> callback.onResult(null));
+                } catch (Exception e) {
+                    Log.w(TAG, "getNextUp parse error: " + e.getMessage());
+                    getMainHandler().post(() -> callback.onResult(null));
+                } finally {
+                    response.close();
+                }
+            }
+        });
     }
 
     /**
