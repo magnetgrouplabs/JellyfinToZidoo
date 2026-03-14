@@ -10,6 +10,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -263,6 +265,72 @@ public class JellyfinApi {
         }
 
         return new ItemResult(path, positionTicks, title, durationTicks, seriesId);
+    }
+
+    /**
+     * Reverses path substitution: converts a Zidoo SMB path back to the server-side path.
+     * Package-private for testability.
+     *
+     * @param zidooPath The path as seen by Zidoo (e.g., "smb://user:pass@host/share/media/file.mkv")
+     * @param rules     Array of rule pairs: each entry is {pathToReplace, replacedWith} from settings
+     *                  Forward substitution does: pathToReplace -> replacedWith
+     *                  Reverse does: replacedWith -> pathToReplace
+     * @return The server-side path, or null if no rule matches or input is null/empty
+     */
+    static String reverseSubstitution(String zidooPath, String[][] rules) {
+        if (zidooPath == null || zidooPath.isEmpty()) {
+            return null;
+        }
+
+        // URL-decode the path (handles %20 etc.)
+        String decoded;
+        try {
+            decoded = URLDecoder.decode(zidooPath, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            decoded = zidooPath;
+        }
+
+        // Strip SMB credentials: smb://user:pass@host -> smb://host
+        String stripped = decoded.replaceFirst("smb://[^@]+@", "smb://");
+
+        // Try each rule in order — first match wins
+        for (String[] rule : rules) {
+            if (rule.length < 2) continue;
+            String pathToReplace = rule[0]; // server-side prefix
+            String replacedWith = rule[1];  // Zidoo-side prefix
+
+            if (!replacedWith.isEmpty() && stripped.startsWith(replacedWith)) {
+                return pathToReplace + stripped.substring(replacedWith.length());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extracts the filename stem (without extension) from a server-side path.
+     * Used as the search term for Jellyfin item lookup by path.
+     * Package-private for testability.
+     *
+     * @param serverPath The server-side file path
+     * @return The filename without extension, or null if input is null/empty
+     */
+    static String extractSearchName(String serverPath) {
+        if (serverPath == null || serverPath.isEmpty()) {
+            return null;
+        }
+
+        // Get the last path segment
+        int lastSlash = serverPath.lastIndexOf('/');
+        String filename = (lastSlash >= 0) ? serverPath.substring(lastSlash + 1) : serverPath;
+
+        // Remove extension
+        int lastDot = filename.lastIndexOf('.');
+        if (lastDot > 0) {
+            filename = filename.substring(0, lastDot);
+        }
+
+        return filename;
     }
 
     /**
