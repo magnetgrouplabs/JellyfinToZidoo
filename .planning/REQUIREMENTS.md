@@ -45,7 +45,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SETT-01**: User can configure Jellyfin server URL
 - [x] **SETT-02**: User can configure API key or username/password credentials
 - [x] **SETT-03**: User can configure path substitution rule (find/replace)
-- [ ] **SETT-04**: User can configure multiple path substitution rules
+- [x] **SETT-04**: User can configure multiple path substitution rules
 - [x] **SETT-05**: User can configure SMB username/password (optional)
 - [x] **SETT-06**: User can toggle debug screen on/off
 - [x] **SETT-07**: Settings UI is D-pad navigable (Android TV / Leanback compatible)
@@ -122,7 +122,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SETT-01 | Phase 2 | Complete |
 | SETT-02 | Phase 2 | Complete |
 | SETT-03 | Phase 2 | Complete |
-| SETT-04 | Phase 4 | Pending |
+| SETT-04 | Phase 4 | Complete |
 | SETT-05 | Phase 2 | Complete |
 | SETT-06 | Phase 2 | Complete |
 | SETT-07 | Phase 2 | Complete |

@@ -77,7 +77,7 @@ Plans:
   2. Each episode navigated to gets its own playback start/progress/stop reporting in Jellyfin
   3. Next episode auto-plays after current episode finishes (including across season boundaries)
   4. Multiple path substitution rules can be configured for multi-share setups
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 04-01-PLAN.md -- TDD: reverse path substitution, NextUp detail parsing, searchItemByPath response parsing
@@ -110,5 +110,5 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 | 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
 | 2. Core Bridge | 4/4 | Complete | 2026-03-13 |
 | 3. Playback Lifecycle | 3/3 | Complete | 2026-03-14 |
-| 4. Episode Intelligence | 1/3 | In Progress|  |
+| 4. Episode Intelligence | 2/3 | In Progress|  |
 | 5. Advanced Playback | 0/3 | Not started | - |
