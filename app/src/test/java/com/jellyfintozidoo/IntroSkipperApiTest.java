@@ -6,6 +6,8 @@ import static org.junit.Assert.*;
 /**
  * Unit tests for IntroSkipper response parsing.
  * Tests parseIntroSkipperResponse() and IntroSkipperResult conversion methods.
+ * JSON format matches intro-skipper/intro-skipper plugin's Segment model:
+ * { "Introduction": { "EpisodeId": "...", "Start": 30.5, "End": 90.0 }, "Credits": { ... } }
  */
 public class IntroSkipperApiTest {
 
@@ -14,15 +16,13 @@ public class IntroSkipperApiTest {
         String json = "{"
                 + "\"Introduction\": {"
                 + "  \"EpisodeId\": \"abc123\","
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 30.5,"
-                + "  \"IntroEnd\": 90.25"
+                + "  \"Start\": 30.5,"
+                + "  \"End\": 90.25"
                 + "},"
                 + "\"Credits\": {"
                 + "  \"EpisodeId\": \"abc123\","
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 1313.264,"
-                + "  \"IntroEnd\": 1408.264"
+                + "  \"Start\": 1313.264,"
+                + "  \"End\": 1408.264"
                 + "}"
                 + "}";
 
@@ -37,9 +37,8 @@ public class IntroSkipperApiTest {
     public void parseIntroSkipperResponse_onlyIntroduction_creditsAreNegativeOne() {
         String json = "{"
                 + "\"Introduction\": {"
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 10.0,"
-                + "  \"IntroEnd\": 50.0"
+                + "  \"Start\": 10.0,"
+                + "  \"End\": 50.0"
                 + "}"
                 + "}";
 
@@ -54,9 +53,8 @@ public class IntroSkipperApiTest {
     public void parseIntroSkipperResponse_onlyCredits_introAreNegativeOne() {
         String json = "{"
                 + "\"Credits\": {"
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 1200.0,"
-                + "  \"IntroEnd\": 1350.0"
+                + "  \"Start\": 1200.0,"
+                + "  \"End\": 1350.0"
                 + "}"
                 + "}";
 
@@ -68,17 +66,15 @@ public class IntroSkipperApiTest {
     }
 
     @Test
-    public void parseIntroSkipperResponse_introNotValid_introAreNegativeOne() {
+    public void parseIntroSkipperResponse_endIsZero_treatedAsInvalid() {
         String json = "{"
                 + "\"Introduction\": {"
-                + "  \"Valid\": false,"
-                + "  \"IntroStart\": 10.0,"
-                + "  \"IntroEnd\": 50.0"
+                + "  \"Start\": 10.0,"
+                + "  \"End\": 0.0"
                 + "},"
                 + "\"Credits\": {"
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 1200.0,"
-                + "  \"IntroEnd\": 1350.0"
+                + "  \"Start\": 1200.0,"
+                + "  \"End\": 1350.0"
                 + "}"
                 + "}";
 
@@ -105,9 +101,8 @@ public class IntroSkipperApiTest {
         // 145.792 seconds = 145792 ms
         String json = "{"
                 + "\"Introduction\": {"
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 145.792,"
-                + "  \"IntroEnd\": 228.497"
+                + "  \"Start\": 145.792,"
+                + "  \"End\": 228.497"
                 + "}"
                 + "}";
 
@@ -127,9 +122,8 @@ public class IntroSkipperApiTest {
     public void introSkipperResult_creditEndMs_convertsCorrectly() {
         String json = "{"
                 + "\"Credits\": {"
-                + "  \"Valid\": true,"
-                + "  \"IntroStart\": 1313.264,"
-                + "  \"IntroEnd\": 1408.264"
+                + "  \"Start\": 1313.264,"
+                + "  \"End\": 1408.264"
                 + "}"
                 + "}";
 

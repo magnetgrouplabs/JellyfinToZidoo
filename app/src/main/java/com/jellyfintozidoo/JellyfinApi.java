@@ -173,17 +173,19 @@ public class JellyfinApi {
 
         if (root.has("Introduction")) {
             JsonObject intro = root.getAsJsonObject("Introduction");
-            if (intro.has("Valid") && intro.get("Valid").getAsBoolean()) {
-                introStart = intro.get("IntroStart").getAsDouble();
-                introEnd = intro.get("IntroEnd").getAsDouble();
+            if (intro.has("Start") && intro.has("End")
+                    && intro.get("End").getAsDouble() > 0.0) {
+                introStart = intro.get("Start").getAsDouble();
+                introEnd = intro.get("End").getAsDouble();
             }
         }
 
         if (root.has("Credits")) {
             JsonObject credits = root.getAsJsonObject("Credits");
-            if (credits.has("Valid") && credits.get("Valid").getAsBoolean()) {
-                creditStart = credits.get("IntroStart").getAsDouble();
-                creditEnd = credits.get("IntroEnd").getAsDouble();
+            if (credits.has("Start") && credits.has("End")
+                    && credits.get("End").getAsDouble() > 0.0) {
+                creditStart = credits.get("Start").getAsDouble();
+                creditEnd = credits.get("End").getAsDouble();
             }
         }
 
@@ -1057,10 +1059,10 @@ public class JellyfinApi {
      * @param seriesId  Series UUID
      * @param callback  Callback for result/no-next
      */
-    public static void getNextUpWithDetails(String serverUrl, String apiKey, String seriesId,
-                                             NextUpDetailCallback callback) {
+    public static void getNextUpWithDetails(String serverUrl, String apiKey, String userId,
+                                             String seriesId, NextUpDetailCallback callback) {
         String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
-        String url = baseUrl + "/Shows/NextUp?seriesId=" + seriesId + "&limit=1&Fields=Path,MediaSources";
+        String url = baseUrl + "/Shows/NextUp?seriesId=" + seriesId + "&userId=" + userId + "&limit=1&Fields=Path,MediaSources";
 
         Request request = new Request.Builder()
                 .url(url)
@@ -1078,12 +1080,14 @@ public class JellyfinApi {
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     if (!response.isSuccessful() || response.body() == null) {
+                        Log.w(TAG, "getNextUpWithDetails: response code=" + response.code());
                         getMainHandler().post(() -> callback.onNoNextEpisode());
                         return;
                     }
                     String body = response.body().string();
                     NextUpDetailResult result = parseNextUpDetailResponse(body);
                     if (result == null) {
+                        Log.d(TAG, "getNextUpWithDetails: no next episode in response");
                         getMainHandler().post(() -> callback.onNoNextEpisode());
                         return;
                     }
