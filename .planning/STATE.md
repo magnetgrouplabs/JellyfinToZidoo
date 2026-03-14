@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-14T01:35:00Z"
-last_activity: 2026-03-14 -- Phase 3 Plan 2 executed (playback lifecycle wiring)
+stopped_at: Completed Phase 3 (all plans + verification)
+last_updated: "2026-03-14T06:00:00Z"
+last_activity: 2026-03-14 -- Phase 3 complete (bug fixes committed, E2E verified)
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 9
+  completed_plans: 9
   percent: 60
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** Native Zidoo playback of Jellyfin media with seamless watch state sync
-**Current focus:** Phase 3 - Playback Lifecycle
+**Current focus:** Phase 3 Complete → Ready for Phase 4
 
 ## Current Position
 
 Phase: 3 of 5 (Playback Lifecycle) -- COMPLETE
-Plan: 2 of 2 -- COMPLETE
-Next: Phase 4
-Status: Phase 3 Complete
-Last activity: 2026-03-14 -- Phase 3 Plan 2 executed (playback lifecycle wiring)
+Plan: 3 of 3 -- COMPLETE
+Next: Phase 4 (Episode Intelligence)
+Status: Ready to plan Phase 4
+Last activity: 2026-03-14 -- Phase 3 bug fixes committed, E2E verified
 
 Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Total execution time: ~2 hours 8 min
+- Total plans completed: 9
+- Total execution time: ~2.5 hours
 
 **By Phase:**
 
@@ -45,7 +45,7 @@ Progress: [██████░░░░] 60%
 |-------|-------|--------|
 | 01-fork-setup | 2 | Complete |
 | 02-core-bridge | 4 | Complete |
-| 03-playback-lifecycle | 2/2 | Complete |
+| 03-playback-lifecycle | 3/3 | Complete |
 
 ## Accumulated Context
 
@@ -60,6 +60,10 @@ Progress: [██████░░░░] 60%
 - Callback interface updated to include durationTicks for watched threshold calculation
 - Progress poller uses 3s initial delay and 10s interval for Zidoo position tracking
 - Kept onRestart->finish() pattern from PlexToZidoo for non-result navigation cases
+- Progress poller cleanup moved from onStop to onDestroy (Zidoo player foreground triggers onStop)
+- Episode auto-advance detected via video.path change in Zidoo getPlayStatus
+- After watched, query Jellyfin NextUp API and open episode detail page (Jellyfin Android TV lacks Next Up countdown for external players)
+- Removed relaunchCallerOrFinish — replaced with finish() + searchNextEpisode()
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T01:35:00Z
-Stopped at: Completed 03-02-PLAN.md
-Resume file: .planning/phases/03-playback-lifecycle/03-02-SUMMARY.md
+Last session: 2026-03-14T06:00:00Z
+Stopped at: Phase 3 complete, ready for Phase 4
+Resume file: .planning/phases/03-playback-lifecycle/03-03-SUMMARY.md
