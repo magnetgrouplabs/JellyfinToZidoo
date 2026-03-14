@@ -36,4 +36,28 @@ public class TickConversionTest {
         // 5,000 ticks < 10,000 ticks per ms, integer division rounds down to 0
         assertEquals(0L, JellyfinApi.ticksToMs(5000L));
     }
+
+    // msToTicks tests
+
+    @Test
+    public void msToTicks_zero_returnsZero() {
+        assertEquals(0L, JellyfinApi.msToTicks(0));
+    }
+
+    @Test
+    public void msToTicks_oneMs_returns10000() {
+        assertEquals(10000L, JellyfinApi.msToTicks(1));
+    }
+
+    @Test
+    public void msToTicks_oneHour_returns36Billion() {
+        // 1 hour = 3,600,000 ms = 36,000,000,000 ticks
+        assertEquals(36000000000L, JellyfinApi.msToTicks(3600000L));
+    }
+
+    @Test
+    public void msToTicks_threeHours_verifyLongArithmetic() {
+        // 3 hours = 10,800,000 ms = 108,000,000,000 ticks (exceeds int range)
+        assertEquals(108000000000L, JellyfinApi.msToTicks(10800000L));
+    }
 }
