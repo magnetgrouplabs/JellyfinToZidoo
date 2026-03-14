@@ -37,6 +37,8 @@ import java.io.File;
 // PLEX_REMOVED_START - Plex API: library list import
 // import java.util.List;
 // PLEX_REMOVED_END
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +47,23 @@ import java.nio.charset.StandardCharsets;
 
 public class Play extends AppCompatActivity
 {
+    private static final int UP_NEXT_REQUEST_CODE = 99;
+
+    private static volatile okhttp3.OkHttpClient localClient;
+    private static okhttp3.OkHttpClient getLocalClient() {
+        if (localClient == null) {
+            synchronized (Play.class) {
+                if (localClient == null) {
+                    localClient = new okhttp3.OkHttpClient.Builder()
+                            .connectTimeout(3, java.util.concurrent.TimeUnit.SECONDS)
+                            .readTimeout(3, java.util.concurrent.TimeUnit.SECONDS)
+                            .build();
+                }
+            }
+        }
+        return localClient;
+    }
+
     // PLEX_REMOVED_START - Plex API: token and client identifier URL parameters
     // static final String tokenParameter = "X-Plex-Token=";
     // static final String clientParameter = "X-Plex-Client-Identifier=";
@@ -877,7 +896,7 @@ public class Play extends AppCompatActivity
                         .build();
 
                 // Synchronous call -- runs on executor thread, not main thread
-                try (okhttp3.Response response = new okhttp3.OkHttpClient().newCall(request).execute()) {
+                try (okhttp3.Response response = getLocalClient().newCall(request).execute()) {
                     if (response.isSuccessful() && response.body() != null) {
                         com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(
                                 response.body().string()).getAsJsonObject();
@@ -891,8 +910,89 @@ public class Play extends AppCompatActivity
                             if (nowPlayingPath != null && currentPlayingPath != null
                                     && !nowPlayingPath.equals(currentPlayingPath)) {
                                 Log.d("Play", "Zidoo advanced to next file: " + nowPlayingPath);
-                                handleEpisodeCompleted();
-                                return; // Stop processing -- poller will be shut down
+                                final String oldItemId = jellyfinItemId;
+                                final String oldPlaySessionId = playSessionId;
+                                final long oldDuration = durationTicks > 0 ? durationTicks
+                                        : (lastKnownDurationMs > 0 ? JellyfinApi.msToTicks(lastKnownDurationMs)
+                                        : JellyfinApi.msToTicks(lastKnownPositionMs));
+
+                                // Update tracking path immediately to prevent re-triggering
+                                currentPlayingPath = nowPlayingPath;
+
+                                final String detectedPath = nowPlayingPath;
+                                runOnUiThread(() -> {
+                                    // 1. Close out old episode
+                                    JellyfinApi.reportPlaybackStopped(serverUrl, accessToken, oldItemId,
+                                            oldPlaySessionId, oldDuration, new JellyfinApi.SimpleCallback() {
+                                        @Override
+                                        public void onSuccess(String msg) {
+                                            JellyfinApi.markAsWatched(serverUrl, accessToken, userId,
+                                                    oldItemId, new JellyfinApi.SimpleCallback() {
+                                                @Override public void onSuccess(String msg) {
+                                                    Log.d("Play", "Previous episode marked watched");
+                                                }
+                                                @Override public void onError(String error) {
+                                                    Log.w("Play", "Failed to mark previous watched: " + error);
+                                                }
+                                            });
+                                        }
+                                        @Override
+                                        public void onError(String error) {
+                                            Log.w("Play", "Failed to report stop for previous episode: " + error);
+                                        }
+                                    });
+
+                                    // 2. Identify new episode via reverse substitution
+                                    String[][] rules = getSubstitutionRules();
+                                    String reversedPath = JellyfinApi.reverseSubstitution(detectedPath, rules);
+                                    if (reversedPath != null) {
+                                        JellyfinApi.searchItemByPath(serverUrl, accessToken, reversedPath,
+                                                new JellyfinApi.SearchByPathCallback() {
+                                            @Override
+                                            public void onFound(String newItemId) {
+                                                // 3. Start fresh tracking for new episode
+                                                jellyfinItemId = newItemId;
+                                                playSessionId = java.util.UUID.randomUUID().toString().replace("-", "");
+                                                durationTicks = 0;
+                                                lastKnownPositionMs = 0;
+                                                lastKnownDurationMs = 0;
+
+                                                // Get duration for new episode
+                                                JellyfinApi.getItem(serverUrl, accessToken, newItemId,
+                                                        new JellyfinApi.Callback() {
+                                                    @Override
+                                                    public void onSuccess(String path, long posTicks, String title,
+                                                                          long durTicks, String sid) {
+                                                        durationTicks = durTicks;
+                                                        if (sid != null && !sid.isEmpty()) seriesId = sid;
+                                                        // Report playback start for new episode
+                                                        JellyfinApi.reportPlaybackStart(serverUrl, accessToken,
+                                                                jellyfinItemId, playSessionId,
+                                                                new JellyfinApi.SimpleCallback() {
+                                                            @Override public void onSuccess(String msg) {
+                                                                Log.d("Play", "New episode tracking started: " + title);
+                                                            }
+                                                            @Override public void onError(String error) {
+                                                                Log.w("Play", "Failed to report start: " + error);
+                                                            }
+                                                        });
+                                                    }
+                                                    @Override
+                                                    public void onError(String error) {
+                                                        Log.w("Play", "Failed to get new episode details: " + error);
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onNotFound(String error) {
+                                                Log.w("Play", "Could not identify new episode: " + error);
+                                            }
+                                        });
+                                    } else {
+                                        Log.w("Play", "Reverse substitution failed for: " + detectedPath);
+                                    }
+                                });
+                                return; // Skip normal progress reporting for this tick
                             }
 
                             if (nowPlayingPath != null && currentPlayingPath == null) {
@@ -930,9 +1030,10 @@ public class Play extends AppCompatActivity
     }
 
     /**
-     * Called when the progress poller detects Zidoo auto-advanced to a different file.
-     * Reports the previous episode as stopped, marks it watched, then searches for the
-     * next episode and relaunches ourselves — same as PlexToZidoo's searchFiles() pattern.
+     * Called when the progress poller detects Zidoo auto-advanced to a different file
+     * (via the old searchNextEpisode path — now replaced by per-episode tracking reset
+     * in the poller itself). This method is retained for the onActivityResult watched path.
+     * Reports the previous episode as stopped, marks it watched, then launches Up Next.
      */
     private void handleEpisodeCompleted() {
         // Must run on UI thread since we may call startActivity/finish
@@ -958,52 +1059,90 @@ public class Play extends AppCompatActivity
                         @Override
                         public void onSuccess(String msg) {
                             Log.d("Play", "Episode completed, marked as watched");
-                            searchNextEpisode();
+                            if (!seriesId.isEmpty()) {
+                                launchUpNext();
+                            } else {
+                                finish(); // Movie -- no Up Next
+                            }
                         }
                         @Override
                         public void onError(String error) {
                             Log.w("Play", "Failed to mark watched: " + error);
-                            searchNextEpisode();
+                            if (!seriesId.isEmpty()) {
+                                launchUpNext();
+                            } else {
+                                finish();
+                            }
                         }
                     });
                 }
                 @Override
                 public void onError(String error) {
                     Log.w("Play", "Failed to report stop on episode complete: " + error);
-                    searchNextEpisode();
+                    if (!seriesId.isEmpty()) {
+                        launchUpNext();
+                    } else {
+                        finish();
+                    }
                 }
             });
         });
     }
 
     /**
-     * Jellyfin equivalent of PlexToZidoo's searchFiles().
-     * Queries Jellyfin for the next episode in the series and opens its
-     * detail page in the Jellyfin client.
+     * Launches the Up Next countdown screen showing the next episode in the series.
+     * Queries Jellyfin for next up details, then starts UpNextActivity.
      */
-    private void searchNextEpisode() {
+    private void launchUpNext() {
         if (seriesId.isEmpty() || serverUrl.isEmpty() || accessToken.isEmpty()) {
             finish();
             return;
         }
 
-        JellyfinApi.getNextUp(serverUrl, accessToken, seriesId, nextItemId -> {
-            if (nextItemId != null) {
-                // Open the next episode's detail page in the Jellyfin client
-                try {
-                    Intent jellyfinIntent = new Intent(Intent.ACTION_VIEW);
-                    jellyfinIntent.setComponent(new android.content.ComponentName(
-                            callerPackage.isEmpty() ? "org.jellyfin.androidtv" : callerPackage,
-                            "org.jellyfin.androidtv.ui.startup.StartupActivity"));
-                    jellyfinIntent.putExtra("ItemId", nextItemId);
-                    jellyfinIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(jellyfinIntent);
-                } catch (Exception e) {
-                    Log.w("Play", "Failed to open next episode in Jellyfin: " + e.getMessage());
+        JellyfinApi.getNextUpWithDetails(serverUrl, accessToken, seriesId,
+            new JellyfinApi.NextUpDetailCallback() {
+                @Override
+                public void onResult(String nextItemId, String seriesName, String episodeName,
+                                     int seasonNumber, int episodeNumber, String sid, String serverPath) {
+                    Intent upNextIntent = new Intent(Play.this, UpNextActivity.class);
+                    upNextIntent.putExtra("nextItemId", nextItemId);
+                    upNextIntent.putExtra("seriesName", seriesName);
+                    upNextIntent.putExtra("episodeName", episodeName);
+                    upNextIntent.putExtra("seasonNumber", seasonNumber);
+                    upNextIntent.putExtra("episodeNumber", episodeNumber);
+                    upNextIntent.putExtra("seriesId", sid);
+                    upNextIntent.putExtra("serverPath", serverPath);
+                    // Backdrop URL uses seriesId for series-level image
+                    upNextIntent.putExtra("backdropUrl", serverUrl + "/Items/" + sid + "/Images/Backdrop");
+                    upNextIntent.putExtra("serverUrl", serverUrl);
+                    upNextIntent.putExtra("accessToken", accessToken);
+                    startActivityForResult(upNextIntent, UP_NEXT_REQUEST_CODE);
                 }
+
+                @Override
+                public void onNoNextEpisode() {
+                    // Series finale — go back to Jellyfin client
+                    finish();
+                }
+            });
+    }
+
+    /**
+     * Extracts all configured substitution rules from SharedPreferences.
+     * Returns a 2D array where each entry is {pathToReplace, replacedWith}.
+     */
+    private String[][] getSubstitutionRules() {
+        String[] prefIndex = {"", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10"};
+        List<String[]> rules = new ArrayList<>();
+        android.content.SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        for (String s : prefIndex) {
+            String pathToReplace = prefs.getString("path_to_replace" + s, "").trim();
+            String replacedWith = prefs.getString("replaced_with" + s, "").trim();
+            if (!pathToReplace.isEmpty() && !replacedWith.isEmpty()) {
+                rules.add(new String[]{pathToReplace, replacedWith});
             }
-            finish();
-        });
+        }
+        return rules.toArray(new String[0][]);
     }
 
     private void stopProgressPoller() {
@@ -1024,6 +1163,67 @@ public class Play extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         super.onActivityResult(requestCode, resultCode, data);
+
+        // Handle Up Next result
+        if (requestCode == UP_NEXT_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                // User chose to play next episode — set up fresh tracking and launch Zidoo
+                String nextItemId = data.getStringExtra("nextItemId");
+                String nextServerPath = data.getStringExtra("serverPath");
+                String nextSeriesId = data.getStringExtra("seriesId");
+
+                // Reset tracking state for new episode
+                jellyfinItemId = nextItemId;
+                seriesId = nextSeriesId != null ? nextSeriesId : seriesId;
+                playSessionId = java.util.UUID.randomUUID().toString().replace("-", "");
+                durationTicks = 0;
+                lastKnownPositionMs = 0;
+                lastKnownDurationMs = 0;
+                currentPlayingPath = null;
+
+                // Resolve path and launch Zidoo player
+                foundSubstitution = false;
+                doSubstitution(nextServerPath);
+                if (foundSubstitution) {
+                    // Get item details for duration tracking
+                    JellyfinApi.getItem(serverUrl, accessToken, nextItemId, new JellyfinApi.Callback() {
+                        @Override
+                        public void onSuccess(String path, long posTicks, String title, long durTicks, String sid) {
+                            durationTicks = durTicks;
+                            videoTitle = title;
+                            // Report playback start
+                            JellyfinApi.reportPlaybackStart(serverUrl, accessToken, jellyfinItemId,
+                                    playSessionId, new JellyfinApi.SimpleCallback() {
+                                @Override public void onSuccess(String msg) { }
+                                @Override public void onError(String error) {
+                                    Log.w("Play", "Failed to report start for next ep: " + error);
+                                }
+                            });
+                            // Launch Zidoo player
+                            buildZidooIntent(directPath, 0); // Start from beginning
+                            startActivityForResult(newIntent, 98);
+                            startProgressPoller();
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.w("Play", "Failed to get next episode details: " + error);
+                            // Launch anyway with what we have
+                            buildZidooIntent(directPath, 0);
+                            startActivityForResult(newIntent, 98);
+                            startProgressPoller();
+                        }
+                    });
+                } else {
+                    Log.e("Play", "No substitution rule matched for next episode path: " + nextServerPath);
+                    Toast.makeText(getApplicationContext(), "Cannot resolve next episode path", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            } else {
+                // User canceled Up Next — go back
+                finish();
+            }
+            return; // Don't fall through to Zidoo result handling
+        }
 
         // Stop the progress poller immediately
         stopProgressPoller();
@@ -1058,13 +1258,21 @@ public class Play extends AppCompatActivity
                         @Override
                         public void onSuccess(String msg) {
                             Log.d("Play", "Marked as watched");
-                            // Same as PlexToZidoo: search for next episode
-                            searchNextEpisode();
+                            // Launch Up Next for TV episodes, finish for movies
+                            if (!seriesId.isEmpty()) {
+                                launchUpNext();
+                            } else {
+                                finish();
+                            }
                         }
                         @Override
                         public void onError(String error) {
                             Log.w("Play", "Failed to mark watched: " + error);
-                            searchNextEpisode();
+                            if (!seriesId.isEmpty()) {
+                                launchUpNext();
+                            } else {
+                                finish();
+                            }
                         }
                     });
                 } else {
