@@ -127,9 +127,42 @@
             android:singleLine="true"
             android:inputType="textPassword" />
 
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/substitution_rule_2_title">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_02"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_02"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_02"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_02"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
         <Preference
             android:key="substitution_link"
-            android:title="@string/substitution_link" />
+            android:title="@string/substitution_link_more" />
 
     </PreferenceCategory>
 
