@@ -18,6 +18,8 @@
     <string name="useZidooPlayer_title">Use zidoo native player</string>
     <string name="showTitle_title">Show title when zidoo player starts</string>
     <string name="auto_play_title">Auto play next episode</string>
+    <string name="skip_intros_title">Skip intros</string>
+    <string name="skip_credits_title">Skip credits</string>
     <!-- Jellyfin Preferences -->
     <string name="jellyfin_server_settings">Jellyfin Server</string>
     <string name="jellyfin_server_url_title">Server URL</string>

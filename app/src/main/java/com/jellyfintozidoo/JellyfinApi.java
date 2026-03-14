@@ -1121,4 +1121,51 @@ public class JellyfinApi {
             }
         });
     }
+
+    /**
+     * Fetches IntroSkipper segments for an episode from the Jellyfin server.
+     * Returns the raw JSON response body via callback for parsing with parseIntroSkipperResponse().
+     * On 404 or any error, returns empty JSON "{}" which parses to all -1 sentinels (silent no-op).
+     * Callback runs on the main (UI) thread.
+     *
+     * @param serverUrl   Base server URL
+     * @param accessToken Access token
+     * @param itemId      Episode item ID
+     * @param callback    Callback for success (raw JSON body) / error
+     */
+    public static void getIntroSkipperSegments(String serverUrl, String accessToken,
+                                                String itemId, SimpleCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Episode/" + itemId + "/IntroSkipperSegments";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildAuthHeader(accessToken))
+                .build();
+
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.w(TAG, "getIntroSkipperSegments failed: " + e.getMessage());
+                // Silent no-op: empty JSON parses to all -1 sentinels
+                getMainHandler().post(() -> callback.onSuccess("{}"));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        // 404 or other error: silent no-op with empty JSON
+                        Log.d(TAG, "getIntroSkipperSegments: HTTP " + response.code() + " for item " + itemId);
+                        getMainHandler().post(() -> callback.onSuccess("{}"));
+                        return;
+                    }
+                    String body = response.body().string();
+                    getMainHandler().post(() -> callback.onSuccess(body));
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
 }
