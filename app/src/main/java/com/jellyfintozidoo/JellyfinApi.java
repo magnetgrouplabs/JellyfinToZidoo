@@ -126,6 +126,69 @@ public class JellyfinApi {
     }
 
     /**
+     * Converts milliseconds to Jellyfin playback position ticks.
+     *
+     * @param ms Position in milliseconds
+     * @return Position in ticks
+     */
+    public static long msToTicks(long ms) {
+        return ms * TICKS_PER_MS;
+    }
+
+    /**
+     * Builds the JSON body for a playback start report.
+     * Package-private for testability.
+     */
+    static JsonObject buildPlaybackStartBody(String itemId, String playSessionId) {
+        JsonObject body = new JsonObject();
+        body.addProperty("ItemId", itemId);
+        body.addProperty("PlaySessionId", playSessionId);
+        body.addProperty("CanSeek", true);
+        body.addProperty("PlayMethod", "DirectPlay");
+        body.addProperty("PositionTicks", 0L);
+        return body;
+    }
+
+    /**
+     * Builds the JSON body for a playback progress report.
+     * Package-private for testability.
+     */
+    static JsonObject buildPlaybackProgressBody(String itemId, String playSessionId,
+                                                 long positionTicks, boolean isPaused) {
+        JsonObject body = new JsonObject();
+        body.addProperty("ItemId", itemId);
+        body.addProperty("PlaySessionId", playSessionId);
+        body.addProperty("PositionTicks", positionTicks);
+        body.addProperty("IsPaused", isPaused);
+        body.addProperty("CanSeek", true);
+        return body;
+    }
+
+    /**
+     * Builds the JSON body for a playback stopped report.
+     * Package-private for testability.
+     */
+    static JsonObject buildPlaybackStoppedBody(String itemId, String playSessionId,
+                                                long positionTicks) {
+        JsonObject body = new JsonObject();
+        body.addProperty("ItemId", itemId);
+        body.addProperty("PlaySessionId", playSessionId);
+        body.addProperty("PositionTicks", positionTicks);
+        return body;
+    }
+
+    /**
+     * Determines if playback has reached the watched threshold (90% of duration).
+     *
+     * @param positionTicks Current position in ticks
+     * @param durationTicks Total duration in ticks
+     * @return true if position exceeds 90% of duration
+     */
+    public static boolean isWatched(long positionTicks, long durationTicks) {
+        return durationTicks > 0 && positionTicks > (long) (durationTicks * 0.9);
+    }
+
+    /**
      * Builds the Jellyfin authorization header value.
      * Package-private for testability.
      *
