@@ -82,6 +82,14 @@ public class Play extends AppCompatActivity
     // private boolean remoteStream = false;
     // PLEX_REMOVED_END
     private boolean zdmc = false;
+    private String callerPackage = "";
+    private String serverUrl = "";
+    private String accessToken = "";
+    private String userId = "";
+    private String playSessionId = "";
+    private long durationTicks = 0;
+    private long lastKnownPositionMs = 0;
+    private java.util.concurrent.ScheduledExecutorService progressPoller = null;
     // PLEX_REMOVED_START - Plex API: media version index
     // private int mediaIndex = -1;
     // PLEX_REMOVED_END
@@ -494,6 +502,18 @@ public class Play extends AppCompatActivity
     {
         super.onStart();
 
+        // Capture calling package for relaunch after playback
+        String caller = getCallingPackage();
+        if (caller == null) {
+            android.net.Uri referrer = getReferrer();
+            if (referrer != null && "android-app".equals(referrer.getScheme())) {
+                caller = referrer.getHost();
+            }
+        }
+        if (caller != null && !caller.isEmpty()) {
+            callerPackage = caller;
+        }
+
         originalIntent = getIntent();
 
         String inputString = originalIntent.getDataString();
@@ -506,6 +526,22 @@ public class Play extends AppCompatActivity
             if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
             {
                 startActivityForResult(newIntent, 98);
+                // Report playback start to Jellyfin
+                if (!jellyfinItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
+                    JellyfinApi.reportPlaybackStart(serverUrl, accessToken, jellyfinItemId,
+                        playSessionId, new JellyfinApi.SimpleCallback() {
+                            @Override
+                            public void onSuccess(String msg) {
+                                Log.d("Play", "Playback start reported");
+                                startProgressPoller();
+                            }
+                            @Override
+                            public void onError(String error) {
+                                Log.w("Play", "Failed to report playback start: " + error);
+                                startProgressPoller(); // Start poller anyway
+                            }
+                        });
+                }
             }
             else
             {
@@ -694,10 +730,10 @@ public class Play extends AppCompatActivity
                 }
                 final int intentPos = intentPosition;
 
-                // Read server config
-                String serverUrl = PreferenceManager.getDefaultSharedPreferences(
+                // Read server config and store in instance fields for playback reporting
+                serverUrl = PreferenceManager.getDefaultSharedPreferences(
                     getApplicationContext()).getString("jellyfin_server_url", "");
-                String accessToken = SecureStorage.getInstance(getApplicationContext())
+                accessToken = SecureStorage.getInstance(getApplicationContext())
                     .getString("jellyfin_access_token", "");
 
                 if(serverUrl.isEmpty() || accessToken.isEmpty())
@@ -707,15 +743,21 @@ public class Play extends AppCompatActivity
                     return;
                 }
 
+                // Store userId and generate playSessionId for playback reporting
+                userId = SecureStorage.getInstance(getApplicationContext())
+                    .getString("jellyfin_user_id", "");
+                playSessionId = java.util.UUID.randomUUID().toString().replace("-", "");
+
                 // Call Jellyfin API asynchronously
                 JellyfinApi.getItem(serverUrl, accessToken, itemId, new JellyfinApi.Callback()
                 {
                     @Override
-                    public void onSuccess(String serverPath, long positionTicks, String title)
+                    public void onSuccess(String serverPath, long positionTicks, String title, long durationTicks)
                     {
                         jellyfinApiPath = serverPath;
                         videoPath = serverPath;
                         videoTitle = title;
+                        Play.this.durationTicks = durationTicks;
 
                         // Use intent position if provided, otherwise convert API ticks to ms
                         if(intentPos > 0)
@@ -819,11 +861,22 @@ public class Play extends AppCompatActivity
     }
 
 
+    private void startProgressPoller() {
+        // Implemented in Task 2 -- polls Zidoo for playback position
+    }
+
+    private void stopProgressPoller() {
+        if (progressPoller != null) {
+            progressPoller.shutdownNow();
+            progressPoller = null;
+        }
+    }
+
     @Override
     protected void onStop()
     {
         super.onStop();
-
+        stopProgressPoller();
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data)

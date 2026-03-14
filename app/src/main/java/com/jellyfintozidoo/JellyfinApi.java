@@ -67,7 +67,7 @@ public class JellyfinApi {
      * Callback for getItem() responses.
      */
     public interface Callback {
-        void onSuccess(String serverPath, long positionTicks, String title);
+        void onSuccess(String serverPath, long positionTicks, String title, long durationTicks);
         void onError(String error);
     }
 
@@ -294,7 +294,7 @@ public class JellyfinApi {
 
                     String body = response.body() != null ? response.body().string() : "";
                     ItemResult result = parseItemResponse(body);
-                    getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title));
+                    getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title, result.durationTicks));
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to parse item response", e);
                     final String msg = "Parse error: " + e.getMessage();
