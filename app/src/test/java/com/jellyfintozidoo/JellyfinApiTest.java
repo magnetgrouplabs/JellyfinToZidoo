@@ -146,4 +146,159 @@ public class JellyfinApiTest {
         assertEquals("Regression Test", result.title);
         assertEquals(36000000000L, result.durationTicks);
     }
+
+    // --- parseItemResponse: episode-specific fields ---
+
+    @Test
+    public void parseItemResponse_episodeJson_extractsSeriesId() throws Exception {
+        String json = "{"
+                + "\"Name\": \"Pilot\","
+                + "\"Path\": \"/media/Shows/Breaking Bad/S01E01.mkv\","
+                + "\"RunTimeTicks\": 34800000000,"
+                + "\"SeriesId\": \"a1b2c3d4e5f6\","
+                + "\"ParentIndexNumber\": 1,"
+                + "\"IndexNumber\": 1"
+                + "}";
+
+        JellyfinApi.ItemResult result = JellyfinApi.parseItemResponse(json);
+        assertEquals("a1b2c3d4e5f6", result.seriesId);
+        assertEquals("Pilot", result.title);
+    }
+
+    // --- parseNextUpDetailResponse tests ---
+
+    @Test
+    public void parseNextUpDetailResponse_fullJson_extractsAllFields() throws Exception {
+        String json = "{"
+                + "\"Items\": [{"
+                + "  \"Id\": \"abc123\","
+                + "  \"SeriesName\": \"Breaking Bad\","
+                + "  \"Name\": \"Cat's in the Bag...\","
+                + "  \"ParentIndexNumber\": 1,"
+                + "  \"IndexNumber\": 2,"
+                + "  \"SeriesId\": \"series-xyz\","
+                + "  \"Path\": \"/media/Shows/Breaking Bad/S01E02.mkv\","
+                + "  \"MediaSources\": [{"
+                + "    \"Path\": \"/media/Shows/Breaking Bad/S01E02.mkv\""
+                + "  }]"
+                + "}],"
+                + "\"TotalRecordCount\": 1"
+                + "}";
+
+        JellyfinApi.NextUpDetailResult result = JellyfinApi.parseNextUpDetailResponse(json);
+        assertNotNull(result);
+        assertEquals("abc123", result.itemId);
+        assertEquals("Breaking Bad", result.seriesName);
+        assertEquals("Cat's in the Bag...", result.episodeName);
+        assertEquals(1, result.seasonNumber);
+        assertEquals(2, result.episodeNumber);
+        assertEquals("series-xyz", result.seriesId);
+        assertEquals("/media/Shows/Breaking Bad/S01E02.mkv", result.serverPath);
+    }
+
+    @Test
+    public void parseNextUpDetailResponse_missingOptionalFields_returnsDefaults() throws Exception {
+        String json = "{"
+                + "\"Items\": [{"
+                + "  \"Id\": \"item-001\","
+                + "  \"Path\": \"/media/file.mkv\""
+                + "}]"
+                + "}";
+
+        JellyfinApi.NextUpDetailResult result = JellyfinApi.parseNextUpDetailResponse(json);
+        assertNotNull(result);
+        assertEquals("item-001", result.itemId);
+        assertEquals("", result.seriesName);
+        assertEquals("", result.episodeName);
+        assertEquals(0, result.seasonNumber);
+        assertEquals(0, result.episodeNumber);
+        assertNull(result.seriesId);
+        assertEquals("/media/file.mkv", result.serverPath);
+    }
+
+    @Test
+    public void parseNextUpDetailResponse_emptyItems_returnsNull() throws Exception {
+        String json = "{"
+                + "\"Items\": [],"
+                + "\"TotalRecordCount\": 0"
+                + "}";
+
+        JellyfinApi.NextUpDetailResult result = JellyfinApi.parseNextUpDetailResponse(json);
+        assertNull(result);
+    }
+
+    @Test
+    public void parseNextUpDetailResponse_pathInMediaSourcesFallback() throws Exception {
+        String json = "{"
+                + "\"Items\": [{"
+                + "  \"Id\": \"item-fallback\","
+                + "  \"Name\": \"Episode\","
+                + "  \"MediaSources\": [{"
+                + "    \"Path\": \"/media/Shows/fallback-ep.mkv\""
+                + "  }]"
+                + "}]"
+                + "}";
+
+        JellyfinApi.NextUpDetailResult result = JellyfinApi.parseNextUpDetailResponse(json);
+        assertNotNull(result);
+        assertEquals("/media/Shows/fallback-ep.mkv", result.serverPath);
+    }
+
+    // --- parseSearchByPathResponse tests ---
+
+    @Test
+    public void parseSearchByPathResponse_findsExactMatch() throws Exception {
+        String json = "{"
+                + "\"Items\": ["
+                + "  {\"Id\": \"wrong-id\", \"Path\": \"/media/Shows/Other/ep.mkv\"},"
+                + "  {\"Id\": \"correct-id\", \"Path\": \"/media/Shows/Breaking Bad/S01E02.mkv\"},"
+                + "  {\"Id\": \"also-wrong\", \"Path\": \"/media/Shows/Another/ep.mkv\"}"
+                + "],"
+                + "\"TotalRecordCount\": 3"
+                + "}";
+
+        String result = JellyfinApi.parseSearchByPathResponse(json,
+                "/media/Shows/Breaking Bad/S01E02.mkv");
+        assertEquals("correct-id", result);
+    }
+
+    @Test
+    public void parseSearchByPathResponse_noExactMatch_returnsNull() throws Exception {
+        String json = "{"
+                + "\"Items\": ["
+                + "  {\"Id\": \"id-1\", \"Path\": \"/media/Shows/Other/ep.mkv\"}"
+                + "],"
+                + "\"TotalRecordCount\": 1"
+                + "}";
+
+        String result = JellyfinApi.parseSearchByPathResponse(json,
+                "/media/Shows/Breaking Bad/S01E02.mkv");
+        assertNull(result);
+    }
+
+    @Test
+    public void parseSearchByPathResponse_emptyItems_returnsNull() throws Exception {
+        String json = "{"
+                + "\"Items\": [],"
+                + "\"TotalRecordCount\": 0"
+                + "}";
+
+        String result = JellyfinApi.parseSearchByPathResponse(json,
+                "/media/Shows/Breaking Bad/S01E02.mkv");
+        assertNull(result);
+    }
+
+    @Test
+    public void parseSearchByPathResponse_matchesMediaSourcesPath() throws Exception {
+        String json = "{"
+                + "\"Items\": ["
+                + "  {\"Id\": \"ms-match\", \"MediaSources\": [{\"Path\": \"/media/Shows/ep.mkv\"}]}"
+                + "],"
+                + "\"TotalRecordCount\": 1"
+                + "}";
+
+        String result = JellyfinApi.parseSearchByPathResponse(json,
+                "/media/Shows/ep.mkv");
+        assertEquals("ms-match", result);
+    }
 }
