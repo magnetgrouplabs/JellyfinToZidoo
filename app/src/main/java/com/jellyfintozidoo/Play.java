@@ -862,7 +862,47 @@ public class Play extends AppCompatActivity
 
 
     private void startProgressPoller() {
-        // Implemented in Task 2 -- polls Zidoo for playback position
+        if (progressPoller != null) return; // Already running
+
+        progressPoller = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+        // Initial delay of 3 seconds (Zidoo player needs time to start), then every 10 seconds
+        progressPoller.scheduleAtFixedRate(() -> {
+            try {
+                okhttp3.Request request = new okhttp3.Request.Builder()
+                        .url("http://127.0.0.1:9529/ZidooVideoPlay/getPlayStatus")
+                        .build();
+
+                // Synchronous call -- runs on executor thread, not main thread
+                try (okhttp3.Response response = new okhttp3.OkHttpClient().newCall(request).execute()) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(
+                                response.body().string()).getAsJsonObject();
+                        if (root.has("video")) {
+                            com.google.gson.JsonObject video = root.getAsJsonObject("video");
+                            if (video.has("currentPosition")) {
+                                long currentPositionMs = video.get("currentPosition").getAsLong();
+                                lastKnownPositionMs = currentPositionMs;
+
+                                long positionTicks = JellyfinApi.msToTicks(currentPositionMs);
+                                // Report progress to Jellyfin (fire and forget on main thread callback)
+                                if (!jellyfinItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
+                                    JellyfinApi.reportPlaybackProgress(serverUrl, accessToken,
+                                            jellyfinItemId, playSessionId, positionTicks, false,
+                                            new JellyfinApi.SimpleCallback() {
+                                                @Override public void onSuccess(String msg) { }
+                                                @Override public void onError(String error) {
+                                                    Log.w("Play", "Progress report failed: " + error);
+                                                }
+                                            });
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Log.w("Play", "Zidoo poll failed: " + e.getMessage());
+            }
+        }, 3, 10, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     private void stopProgressPoller() {
@@ -872,6 +912,21 @@ public class Play extends AppCompatActivity
         }
     }
 
+    private void relaunchCallerOrFinish() {
+        if (!callerPackage.isEmpty()) {
+            try {
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage(callerPackage);
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(launchIntent);
+                }
+            } catch (Exception e) {
+                Log.w("Play", "Failed to relaunch caller: " + e.getMessage());
+            }
+        }
+        finish();
+    }
+
     @Override
     protected void onStop()
     {
@@ -879,69 +934,64 @@ public class Play extends AppCompatActivity
         stopProgressPoller();
     }
 
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // PLEX_REMOVED_START - Plex API: reports watch progress/scrobble status back to Plex server and launches Plex client
-        // boolean issuePlexIntent = true;
-        // if(resultCode == Activity.RESULT_OK && requestCode == 98)
-        // {
-        //     int position = data.getIntExtra("position", 0);
-        //     if(position > 0 && !address.isEmpty() && !ratingKey.isEmpty() && !token.isEmpty() && !zdmc)
-        //     {
-        //         RequestQueue queue = Volley.newRequestQueue(this);
-        //         String url;
-        //         if(duration > 0 && position > (duration * .9))
-        //         {
-        //             url = address + "/:/scrobble?key=" + ratingKey + "&identifier=com.plexapp.plugins.library&" + tokenParameter + token;
-        //
-        //             if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("auto_play", false))
-        //             {
-        //                 if(videoIndex > 0 && parentRatingKey != null)
-        //                 {
-        //                     searchFiles();
-        //                 }
-        //             }
-        //         }
-        //         else
-        //         {
-        //             url = address + "/:/progress?key=" + ratingKey + "&identifier=com.plexapp.plugins.library&time=" + position + "&state=stopped&" + tokenParameter + token;
-        //
-        //             if(remoteStream)
-        //             {
-        //                 return;
-        //             }
-        //         }
-        //
-        //         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-        //                 response ->
-        //                 {
-        //                     Intent plex = new Intent(Intent.ACTION_VIEW);
-        //                     plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
-        //                     if(!server.isEmpty())
-        //                     {
-        //                         plex.setData(Uri.parse("plex://server://" + server + "/com.plexapp.plugins.library/library/metadata/" + ratingKey));
-        //                     }
-        //                     startActivity(plex);
-        //                 },
-        //                 error -> Toast.makeText(getApplicationContext(), "Couldn't update progress or watched status", Toast.LENGTH_LONG).show()
-        //         );
-        //
-        //         issuePlexIntent = false;
-        //         queue.add(stringRequest);
-        //     }
-        // }
-        //
-        // if(issuePlexIntent && !zdmc)
-        // {
-        //     Intent plex = new Intent(Intent.ACTION_VIEW);
-        //     plex.setClassName("com.plexapp.android", "com.plexapp.plex.activities.SplashActivity");
-        //     startActivity(plex);
-        // }
-        // PLEX_REMOVED_END
+        // Stop the progress poller immediately
+        stopProgressPoller();
 
-        // TODO: Jellyfin watch state reporting will be implemented in Phase 4
+        // Skip reporting for non-Jellyfin playback or ZDMC
+        if (jellyfinItemId.isEmpty() || serverUrl.isEmpty() || accessToken.isEmpty() || zdmc) {
+            relaunchCallerOrFinish();
+            return;
+        }
+
+        // Get final position from Zidoo player result
+        long finalPositionMs = 0;
+        if (resultCode == Activity.RESULT_OK && requestCode == 98 && data != null) {
+            finalPositionMs = data.getIntExtra("position", 0);
+        }
+        // Fallback to last polled position if Zidoo didn't return one
+        if (finalPositionMs <= 0) {
+            finalPositionMs = lastKnownPositionMs;
+        }
+
+        final long finalPositionTicks = JellyfinApi.msToTicks(finalPositionMs);
+
+        // Report playback stopped to Jellyfin
+        JellyfinApi.reportPlaybackStopped(serverUrl, accessToken, jellyfinItemId,
+                playSessionId, finalPositionTicks, new JellyfinApi.SimpleCallback() {
+            @Override
+            public void onSuccess(String msg) {
+                // Check 90% watched threshold
+                if (JellyfinApi.isWatched(finalPositionTicks, durationTicks)) {
+                    JellyfinApi.markAsWatched(serverUrl, accessToken, userId,
+                            jellyfinItemId, new JellyfinApi.SimpleCallback() {
+                        @Override
+                        public void onSuccess(String msg) {
+                            Log.d("Play", "Marked as watched");
+                            relaunchCallerOrFinish();
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.w("Play", "Failed to mark watched: " + error);
+                            relaunchCallerOrFinish();
+                        }
+                    });
+                } else {
+                    relaunchCallerOrFinish();
+                }
+            }
+            @Override
+            public void onError(String error) {
+                Toast.makeText(getApplicationContext(),
+                        "Couldn't update progress or watched status",
+                        Toast.LENGTH_LONG).show();
+                relaunchCallerOrFinish();
+            }
+        });
     }
 
     public static String intentToString(Intent intent)
