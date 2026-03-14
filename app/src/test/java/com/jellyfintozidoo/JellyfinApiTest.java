@@ -103,4 +103,47 @@ public class JellyfinApiTest {
         JellyfinApi.ItemResult result = JellyfinApi.parseItemResponse(json);
         assertEquals(0L, result.positionTicks);
     }
+
+    // RunTimeTicks parsing tests
+
+    @Test
+    public void parseItemResponse_withRunTimeTicks_returnsDuration() throws Exception {
+        String json = "{"
+                + "\"Name\": \"Movie\","
+                + "\"Path\": \"/media/movie.mkv\","
+                + "\"RunTimeTicks\": 72000000000"
+                + "}";
+
+        JellyfinApi.ItemResult result = JellyfinApi.parseItemResponse(json);
+        assertEquals(72000000000L, result.durationTicks);
+    }
+
+    @Test
+    public void parseItemResponse_withoutRunTimeTicks_returnsZeroDuration() throws Exception {
+        String json = "{"
+                + "\"Name\": \"No Duration\","
+                + "\"Path\": \"/media/test.mkv\""
+                + "}";
+
+        JellyfinApi.ItemResult result = JellyfinApi.parseItemResponse(json);
+        assertEquals(0L, result.durationTicks);
+    }
+
+    @Test
+    public void parseItemResponse_existingFieldsStillWork() throws Exception {
+        String json = "{"
+                + "\"Name\": \"Regression Test\","
+                + "\"Path\": \"/media/regression.mkv\","
+                + "\"RunTimeTicks\": 36000000000,"
+                + "\"UserData\": {"
+                + "  \"PlaybackPositionTicks\": 18000000000"
+                + "}"
+                + "}";
+
+        JellyfinApi.ItemResult result = JellyfinApi.parseItemResponse(json);
+        assertEquals("/media/regression.mkv", result.path);
+        assertEquals(18000000000L, result.positionTicks);
+        assertEquals("Regression Test", result.title);
+        assertEquals(36000000000L, result.durationTicks);
+    }
 }
