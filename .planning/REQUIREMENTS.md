@@ -113,11 +113,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | BRDG-04 | Phase 2 | Complete |
 | BRDG-05 | Phase 2 | Complete |
 | BRDG-06 | Phase 2 | Complete |
-| PLAY-01 | Phase 3 | Pending |
-| PLAY-02 | Phase 3 | Pending |
-| PLAY-03 | Phase 3 | Pending |
-| PLAY-04 | Phase 3 | Pending |
-| PLAY-05 | Phase 3 | Pending |
+| PLAY-01 | Phase 3 | In Progress |
+| PLAY-02 | Phase 3 | In Progress |
+| PLAY-03 | Phase 3 | In Progress |
+| PLAY-04 | Phase 3 | In Progress |
+| PLAY-05 | Phase 3 | In Progress |
 | PLAY-06 | Phase 3 | Pending |
 | SETT-01 | Phase 2 | Complete |
 | SETT-02 | Phase 2 | Complete |

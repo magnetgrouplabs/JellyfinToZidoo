@@ -64,7 +64,7 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- TDD: msToTicks, playback JSON body builders, isWatched threshold, RunTimeTicks parsing, async reporting methods
+- [x] 03-01-PLAN.md -- TDD: msToTicks, playback JSON body builders, isWatched threshold, RunTimeTicks parsing, async reporting methods
 - [ ] 03-02-PLAN.md -- Play.java integration: caller capture, playback start reporting, Zidoo progress poller, onActivityResult stop/watched/relaunch
 - [ ] 03-03-PLAN.md -- Device deploy and E2E verification checkpoint
 
@@ -109,6 +109,6 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 |-------|----------------|--------|-----------|
 | 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
 | 2. Core Bridge | 4/4 | Complete | 2026-03-13 |
-| 3. Playback Lifecycle | 0/3 | In progress | - |
+| 3. Playback Lifecycle | 1/3 | In progress | - |
 | 4. Episode Intelligence | 0/3 | Not started | - |
 | 5. Advanced Playback | 0/3 | Not started | - |
