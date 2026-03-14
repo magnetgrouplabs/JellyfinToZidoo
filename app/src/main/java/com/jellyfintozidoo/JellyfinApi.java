@@ -15,8 +15,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import okhttp3.Call;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -224,6 +226,76 @@ public class JellyfinApi {
                     getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title));
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to parse item response", e);
+                    final String msg = "Parse error: " + e.getMessage();
+                    getMainHandler().post(() -> callback.onError(msg));
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    /**
+     * Callback for authenticate() responses.
+     */
+    public interface AuthCallback {
+        void onSuccess(String accessToken, String userId, String serverName);
+        void onError(String error);
+    }
+
+    /**
+     * Authenticates with a Jellyfin server using username/password.
+     * Returns an access token and user ID via callback on the main thread.
+     *
+     * @param serverUrl Base server URL
+     * @param username  Jellyfin username
+     * @param password  Jellyfin password
+     * @param callback  Callback for success/error
+     */
+    public static void authenticate(String serverUrl, String username, String password, AuthCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Users/AuthenticateByName";
+
+        JsonObject body = new JsonObject();
+        body.addProperty("Username", username);
+        body.addProperty("Pw", password);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", "MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\"")
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(body.toString(), MediaType.get("application/json")))
+                .build();
+
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "authenticate failed", e);
+                getMainHandler().post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful()) {
+                        final String msg = response.code() == 401 ? "Invalid username or password" : "HTTP error " + response.code();
+                        getMainHandler().post(() -> callback.onError(msg));
+                        return;
+                    }
+
+                    String responseBody = response.body() != null ? response.body().string() : "";
+                    JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+                    String accessToken = root.get("AccessToken").getAsString();
+                    JsonObject user = root.getAsJsonObject("User");
+                    String userId = user.get("Id").getAsString();
+                    String serverName = "";
+                    if (root.has("ServerId") && !root.get("ServerId").isJsonNull()) {
+                        serverName = root.get("ServerId").getAsString();
+                    }
+                    final String sn = serverName;
+                    getMainHandler().post(() -> callback.onSuccess(accessToken, userId, sn));
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse auth response", e);
                     final String msg = "Parse error: " + e.getMessage();
                     getMainHandler().post(() -> callback.onError(msg));
                 } finally {

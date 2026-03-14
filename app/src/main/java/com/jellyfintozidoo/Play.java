@@ -697,18 +697,18 @@ public class Play extends AppCompatActivity
                 // Read server config
                 String serverUrl = PreferenceManager.getDefaultSharedPreferences(
                     getApplicationContext()).getString("jellyfin_server_url", "");
-                String apiKey = SecureStorage.getInstance(getApplicationContext())
-                    .getString("jellyfin_api_key", "");
+                String accessToken = SecureStorage.getInstance(getApplicationContext())
+                    .getString("jellyfin_access_token", "");
 
-                if(serverUrl.isEmpty() || apiKey.isEmpty())
+                if(serverUrl.isEmpty() || accessToken.isEmpty())
                 {
-                    message = "ERROR: Jellyfin server not configured. Go to Settings.";
+                    message = "ERROR: Jellyfin server not configured. Go to Settings and Login.";
                     showDebugPageOrSendIntent();
                     return;
                 }
 
                 // Call Jellyfin API asynchronously
-                JellyfinApi.getItem(serverUrl, apiKey, itemId, new JellyfinApi.Callback()
+                JellyfinApi.getItem(serverUrl, accessToken, itemId, new JellyfinApi.Callback()
                 {
                     @Override
                     public void onSuccess(String serverPath, long positionTicks, String title)

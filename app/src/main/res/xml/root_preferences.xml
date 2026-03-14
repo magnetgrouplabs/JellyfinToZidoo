@@ -9,21 +9,28 @@
             android:key="jellyfin_server_url"
             android:title="@string/jellyfin_server_url_title"
             android:summary="@string/jellyfin_server_url_summary"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="jellyfin_username"
+            android:title="@string/jellyfin_username_title"
             app:useSimpleSummaryProvider="true"
             android:singleLine="true" />
 
         <EditTextPreference
             android:defaultValue=""
-            android:key="jellyfin_api_key"
-            android:title="@string/jellyfin_api_key_title"
+            android:key="jellyfin_password"
+            android:title="@string/jellyfin_password_title"
             app:useSimpleSummaryProvider="false"
             android:singleLine="true"
             android:inputType="textPassword" />
 
         <Preference
-            android:key="jellyfin_test_connection"
-            android:title="@string/jellyfin_test_connection_title"
-            android:summary="@string/jellyfin_test_connection_summary" />
+            android:key="jellyfin_login"
+            android:title="@string/jellyfin_login_title"
+            android:summary="@string/jellyfin_login_summary" />
 
     </PreferenceCategory>
 
