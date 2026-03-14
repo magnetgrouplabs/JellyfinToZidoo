@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-14T01:27:25Z"
-last_activity: 2026-03-14 -- Phase 3 Plan 1 executed (playback reporting API)
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-14T01:35:00Z"
+last_activity: 2026-03-14 -- Phase 3 Plan 2 executed (playback lifecycle wiring)
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
-  percent: 47
+  completed_plans: 8
+  percent: 60
 ---
 
 # Project State
@@ -25,19 +25,19 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 
 ## Current Position
 
-Phase: 3 of 5 (Playback Lifecycle)
-Plan: 1 of 2 -- COMPLETE
-Next: Phase 3 Plan 2 (playback wiring into Play.java)
-Status: Executing Phase 3
-Last activity: 2026-03-14 -- Phase 3 Plan 1 executed (playback reporting API)
+Phase: 3 of 5 (Playback Lifecycle) -- COMPLETE
+Plan: 2 of 2 -- COMPLETE
+Next: Phase 4
+Status: Phase 3 Complete
+Last activity: 2026-03-14 -- Phase 3 Plan 2 executed (playback lifecycle wiring)
 
-Progress: [████▌░░░░░] 47%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Total execution time: ~2 hours 4 min
+- Total plans completed: 8
+- Total execution time: ~2 hours 8 min
 
 **By Phase:**
 
@@ -45,7 +45,7 @@ Progress: [████▌░░░░░] 47%
 |-------|-------|--------|
 | 01-fork-setup | 2 | Complete |
 | 02-core-bridge | 4 | Complete |
-| 03-playback-lifecycle | 1/2 | In Progress |
+| 03-playback-lifecycle | 2/2 | Complete |
 
 ## Accumulated Context
 
@@ -57,6 +57,9 @@ Progress: [████▌░░░░░] 47%
 - SMB password may not need $ suffix (PlexToZidoo works without it)
 - Extracted enqueueSimpleRequest helper to reduce duplication across 4 reporting methods
 - buildFullAuthHeader includes Token field for authenticated POST requests
+- Callback interface updated to include durationTicks for watched threshold calculation
+- Progress poller uses 3s initial delay and 10s interval for Zidoo position tracking
+- Kept onRestart->finish() pattern from PlexToZidoo for non-result navigation cases
 
 ### Pending Todos
 
@@ -68,6 +71,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T01:27:25Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: .planning/phases/03-playback-lifecycle/03-01-SUMMARY.md
+Last session: 2026-03-14T01:35:00Z
+Stopped at: Completed 03-02-PLAN.md
+Resume file: .planning/phases/03-playback-lifecycle/03-02-SUMMARY.md

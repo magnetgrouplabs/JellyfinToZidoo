@@ -61,7 +61,7 @@ Plans:
   2. Stopping playback mid-movie saves the exact resume position in Jellyfin
   3. Watching 90% or more of a movie marks it as watched in Jellyfin
   4. After playback ends, the originating Jellyfin client relaunches (Zidoo 2-app limit workaround)
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 03-01-PLAN.md -- TDD: msToTicks, playback JSON body builders, isWatched threshold, RunTimeTicks parsing, async reporting methods
@@ -109,6 +109,6 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 |-------|----------------|--------|-----------|
 | 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
 | 2. Core Bridge | 4/4 | Complete | 2026-03-13 |
-| 3. Playback Lifecycle | 1/3 | In progress | - |
+| 3. Playback Lifecycle | 2/3 | In Progress|  |
 | 4. Episode Intelligence | 0/3 | Not started | - |
 | 5. Advanced Playback | 0/3 | Not started | - |

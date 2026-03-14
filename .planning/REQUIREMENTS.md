@@ -33,12 +33,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Playback Lifecycle
 
-- [ ] **PLAY-01**: App reports playback start to Jellyfin (POST /Sessions/Playing)
-- [ ] **PLAY-02**: App reports playback progress periodically (POST /Sessions/Playing/Progress)
-- [ ] **PLAY-03**: App reports playback stopped with final position (POST /Sessions/Playing/Stopped)
-- [ ] **PLAY-04**: Resume position written back to Jellyfin on playback stop
-- [ ] **PLAY-05**: Media marked as watched when ≥90% played
-- [ ] **PLAY-06**: App relaunches originating Jellyfin client after playback ends (Zidoo 2-app limit workaround)
+- [x] **PLAY-01**: App reports playback start to Jellyfin (POST /Sessions/Playing)
+- [x] **PLAY-02**: App reports playback progress periodically (POST /Sessions/Playing/Progress)
+- [x] **PLAY-03**: App reports playback stopped with final position (POST /Sessions/Playing/Stopped)
+- [x] **PLAY-04**: Resume position written back to Jellyfin on playback stop
+- [x] **PLAY-05**: Media marked as watched when ≥90% played
+- [x] **PLAY-06**: App relaunches originating Jellyfin client after playback ends (Zidoo 2-app limit workaround)
 
 ### Settings
 
@@ -118,7 +118,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | PLAY-03 | Phase 3 | In Progress |
 | PLAY-04 | Phase 3 | In Progress |
 | PLAY-05 | Phase 3 | In Progress |
-| PLAY-06 | Phase 3 | Pending |
+| PLAY-06 | Phase 3 | Complete |
 | SETT-01 | Phase 2 | Complete |
 | SETT-02 | Phase 2 | Complete |
 | SETT-03 | Phase 2 | Complete |
