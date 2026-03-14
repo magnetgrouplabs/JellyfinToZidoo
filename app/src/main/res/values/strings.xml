@@ -22,9 +22,10 @@
     <string name="jellyfin_server_settings">Jellyfin Server</string>
     <string name="jellyfin_server_url_title">Server URL</string>
     <string name="jellyfin_server_url_summary">e.g. http://192.168.1.10:8096</string>
-    <string name="jellyfin_api_key_title">API Key</string>
-    <string name="jellyfin_test_connection_title">Test Connection</string>
-    <string name="jellyfin_test_connection_summary">Verify server URL and API key</string>
+    <string name="jellyfin_username_title">Username</string>
+    <string name="jellyfin_password_title">Password</string>
+    <string name="jellyfin_login_title">Login</string>
+    <string name="jellyfin_login_summary">Authenticate with Jellyfin server</string>
     <!-- PLEX_REMOVED_START - Plex library preference strings -->
     <!-- <string name="libraries_title">Plex library name(s) to include (use "*" to include all libraries, multiple libraries must be separated by a ",")</string> -->
     <!-- <string name="exclude_libraries_title">Plex library name(s) to exclude (multiple libraries must be separated by a ",")</string> -->

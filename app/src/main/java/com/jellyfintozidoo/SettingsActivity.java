@@ -109,9 +109,9 @@ public class SettingsActivity extends AppCompatActivity
         scrollToPreference = scrollToPref;
         settingsFragment.setPreferencesFromResource(R.xml.root_preferences, settingsRootKey);
         setSmbPasswordPreference();
-        setJellyfinApiKeyPreference();
+        setJellyfinPasswordPreference();
         setJellyfinServerUrlPreference();
-        setTestConnectionPreference();
+        setLoginPreference();
 
         Preference substitutionLink = settingsFragment.findPreference("substitution_link");
         if (substitutionLink != null)
@@ -125,32 +125,42 @@ public class SettingsActivity extends AppCompatActivity
         }
     }
 
-    private static void setJellyfinApiKeyPreference()
+    private static void setJellyfinPasswordPreference()
     {
-        EditTextPreference apiKeyPref = settingsFragment.findPreference("jellyfin_api_key");
-        if (apiKeyPref == null) return;
+        EditTextPreference passwordPref = settingsFragment.findPreference("jellyfin_password");
+        if (passwordPref == null) return;
 
         Context context = settingsFragment.requireContext();
         SharedPreferences securePrefs = SecureStorage.getInstance(context);
 
         // Load existing value from secure storage
-        String existingKey = securePrefs.getString("jellyfin_api_key", "");
-        apiKeyPref.setText(existingKey);
-        apiKeyPref.setSummary((existingKey != null && !existingKey.isEmpty()) ? "********" : "Not set");
+        String existing = securePrefs.getString("jellyfin_password", "");
+        passwordPref.setText(existing);
+        passwordPref.setSummary((existing != null && !existing.isEmpty()) ? "********" : "Not set");
 
         // Mask input in the edit dialog
-        apiKeyPref.setOnBindEditTextListener(editText ->
+        passwordPref.setOnBindEditTextListener(editText ->
                 editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD));
 
         // Write to secure storage instead of default SharedPreferences
-        apiKeyPref.setOnPreferenceChangeListener((preference, newValue) ->
+        passwordPref.setOnPreferenceChangeListener((preference, newValue) ->
         {
             String value = (newValue != null) ? newValue.toString().trim() : "";
-            securePrefs.edit().putString("jellyfin_api_key", value).apply();
-            apiKeyPref.setSummary(value.isEmpty() ? "Not set" : "********");
-            // Return false to prevent writing to default SharedPreferences
+            securePrefs.edit().putString("jellyfin_password", value).apply();
+            passwordPref.setSummary(value.isEmpty() ? "Not set" : "********");
             return false;
         });
+
+        // Show login status
+        Preference loginPref = settingsFragment.findPreference("jellyfin_login");
+        if (loginPref != null)
+        {
+            String token = securePrefs.getString("jellyfin_access_token", "");
+            if (token != null && !token.isEmpty())
+            {
+                loginPref.setSummary("Logged in");
+            }
+        }
     }
 
     private static void setJellyfinServerUrlPreference()
@@ -175,39 +185,46 @@ public class SettingsActivity extends AppCompatActivity
         });
     }
 
-    private static void setTestConnectionPreference()
+    private static void setLoginPreference()
     {
-        Preference testPref = settingsFragment.findPreference("jellyfin_test_connection");
-        if (testPref == null) return;
+        Preference loginPref = settingsFragment.findPreference("jellyfin_login");
+        if (loginPref == null) return;
 
-        testPref.setOnPreferenceClickListener(preference ->
+        loginPref.setOnPreferenceClickListener(preference ->
         {
             Context context = settingsFragment.requireContext();
             SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+            SharedPreferences securePrefs = SecureStorage.getInstance(context);
             String serverUrl = defaultPrefs.getString("jellyfin_server_url", "");
-            String apiKey = SecureStorage.getInstance(context).getString("jellyfin_api_key", "");
+            String username = defaultPrefs.getString("jellyfin_username", "");
+            String password = securePrefs.getString("jellyfin_password", "");
 
-            if (serverUrl == null || serverUrl.isEmpty() || apiKey == null || apiKey.isEmpty())
+            if (serverUrl == null || serverUrl.isEmpty() || username == null || username.isEmpty()
+                    || password == null || password.isEmpty())
             {
-                Toast.makeText(context, "Please configure Server URL and API Key first", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "Please configure Server URL, Username and Password first", Toast.LENGTH_LONG).show();
                 return true;
             }
 
-            testPref.setSummary("Testing...");
-            JellyfinApi.testConnection(serverUrl, apiKey, new JellyfinApi.SimpleCallback()
+            loginPref.setSummary("Logging in...");
+            JellyfinApi.authenticate(serverUrl, username, password, new JellyfinApi.AuthCallback()
             {
                 @Override
-                public void onSuccess(String message)
+                public void onSuccess(String accessToken, String userId, String serverName)
                 {
-                    Toast.makeText(context, message, Toast.LENGTH_LONG).show();
-                    testPref.setSummary("Verify server URL and API key");
+                    securePrefs.edit()
+                            .putString("jellyfin_access_token", accessToken)
+                            .putString("jellyfin_user_id", userId)
+                            .apply();
+                    Toast.makeText(context, "Login successful", Toast.LENGTH_LONG).show();
+                    loginPref.setSummary("Logged in");
                 }
 
                 @Override
                 public void onError(String error)
                 {
-                    Toast.makeText(context, "Connection failed: " + error, Toast.LENGTH_LONG).show();
-                    testPref.setSummary("Verify server URL and API key");
+                    Toast.makeText(context, "Login failed: " + error, Toast.LENGTH_LONG).show();
+                    loginPref.setSummary("Authenticate with Jellyfin server");
                 }
             });
 
@@ -313,6 +330,20 @@ public class SettingsActivity extends AppCompatActivity
 
     public void setPreferenceOnImport(Map.Entry<String, ?> entry)
     {
+        // Handle password import — write directly to SecureStorage
+        if(entry.getKey().equals("jellyfin_password"))
+        {
+            String value = (entry.getValue() != null) ? entry.getValue().toString().trim() : "";
+            SecureStorage.getInstance(getApplicationContext()).edit().putString("jellyfin_password", value).apply();
+            EditTextPreference passwordPref = settingsFragment.findPreference("jellyfin_password");
+            if(passwordPref != null)
+            {
+                passwordPref.setText(value);
+                passwordPref.setSummary(value.isEmpty() ? "Not set" : "********");
+            }
+            return;
+        }
+
         Preference pref = settingsFragment.findPreference(entry.getKey());
         if(pref instanceof EditTextPreference)
         {
@@ -327,17 +358,13 @@ public class SettingsActivity extends AppCompatActivity
         }
         else if(pref instanceof SwitchPreference)
         {
-            // Don't restore a password even if it exists
-            if(!entry.getKey().startsWith("smbPassword"))
+            if(entry.getValue().toString().isEmpty())
             {
-                if(entry.getValue().toString().isEmpty())
-                {
-                    ((SwitchPreference)pref).setChecked(false);
-                }
-                else
-                {
-                    ((SwitchPreference)pref).setChecked(Boolean.parseBoolean(entry.getValue().toString()));
-                }
+                ((SwitchPreference)pref).setChecked(false);
+            }
+            else
+            {
+                ((SwitchPreference)pref).setChecked(Boolean.parseBoolean(entry.getValue().toString()));
             }
         }
     }
@@ -361,13 +388,19 @@ public class SettingsActivity extends AppCompatActivity
             output = new FileOutputStream(backupFile);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            Map<String,?> prefsMap = prefs.getAll().entrySet()
+            Map<String,Object> prefsMap = prefs.getAll().entrySet()
                                                    .stream()
-                                                   .filter(s -> !s.getKey().startsWith("smbPassword") && !s.getKey().equals("jellyfin_api_key"))
                                                    .sorted(Map.Entry.comparingByKey())
                                                    .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                             Map.Entry::getValue,
+                                                                             e -> (Object) e.getValue(),
                                                                              (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+            // Include password from SecureStorage (not in default SharedPreferences)
+            String jellyfinPassword = SecureStorage.getInstance(getApplicationContext()).getString("jellyfin_password", "");
+            if(jellyfinPassword != null && !jellyfinPassword.isEmpty())
+            {
+                prefsMap.put("jellyfin_password", jellyfinPassword);
+            }
 
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String json = gson.toJson(prefsMap);
