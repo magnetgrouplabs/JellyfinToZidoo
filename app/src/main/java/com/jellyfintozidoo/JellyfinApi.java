@@ -11,6 +11,7 @@ import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -817,6 +818,143 @@ public class JellyfinApi {
                     Log.e(TAG, "Failed to parse system info", e);
                     final String msg = "Parse error: " + e.getMessage();
                     getMainHandler().post(() -> callback.onError(msg));
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    /**
+     * Callback for getNextUpWithDetails() — returns full episode metadata for Up Next screen.
+     */
+    public interface NextUpDetailCallback {
+        void onResult(String nextItemId, String seriesName, String episodeName,
+                      int seasonNumber, int episodeNumber, String seriesId, String serverPath);
+        void onNoNextEpisode();
+    }
+
+    /**
+     * Queries Jellyfin for the next unwatched episode with full detail metadata.
+     * Uses /Shows/NextUp with Fields=Path,MediaSources for server path resolution.
+     * Callback runs on the main (UI) thread.
+     *
+     * @param serverUrl Base server URL
+     * @param apiKey    Access token
+     * @param seriesId  Series UUID
+     * @param callback  Callback for result/no-next
+     */
+    public static void getNextUpWithDetails(String serverUrl, String apiKey, String seriesId,
+                                             NextUpDetailCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Shows/NextUp?seriesId=" + seriesId + "&limit=1&Fields=Path,MediaSources";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .build();
+
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.w(TAG, "getNextUpWithDetails failed: " + e.getMessage());
+                getMainHandler().post(() -> callback.onNoNextEpisode());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        getMainHandler().post(() -> callback.onNoNextEpisode());
+                        return;
+                    }
+                    String body = response.body().string();
+                    NextUpDetailResult result = parseNextUpDetailResponse(body);
+                    if (result == null) {
+                        getMainHandler().post(() -> callback.onNoNextEpisode());
+                        return;
+                    }
+                    getMainHandler().post(() -> callback.onResult(
+                            result.itemId, result.seriesName, result.episodeName,
+                            result.seasonNumber, result.episodeNumber,
+                            result.seriesId, result.serverPath));
+                } catch (Exception e) {
+                    Log.w(TAG, "getNextUpWithDetails parse error: " + e.getMessage());
+                    getMainHandler().post(() -> callback.onNoNextEpisode());
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    /**
+     * Callback for searchItemByPath() — returns item ID if found.
+     */
+    public interface SearchByPathCallback {
+        void onFound(String itemId);
+        void onNotFound(String error);
+    }
+
+    /**
+     * Searches Jellyfin for an episode by its server-side file path.
+     * Extracts filename as search term, queries /Items, and matches exact path.
+     * Callback runs on the main (UI) thread.
+     *
+     * @param serverUrl  Base server URL
+     * @param apiKey     Access token
+     * @param serverPath The server-side file path to search for
+     * @param callback   Callback for found/not-found
+     */
+    public static void searchItemByPath(String serverUrl, String apiKey, String serverPath,
+                                         SearchByPathCallback callback) {
+        String searchName = extractSearchName(serverPath);
+        if (searchName == null || searchName.isEmpty()) {
+            getMainHandler().post(() -> callback.onNotFound("Could not extract search name from path"));
+            return;
+        }
+
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String encodedName;
+        try {
+            encodedName = URLEncoder.encode(searchName, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            encodedName = searchName;
+        }
+        String url = baseUrl + "/Items?searchTerm=" + encodedName
+                + "&IncludeItemTypes=Episode&Fields=Path,MediaSources&Recursive=true&Limit=10";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .build();
+
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.w(TAG, "searchItemByPath failed: " + e.getMessage());
+                getMainHandler().post(() -> callback.onNotFound("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        final String msg = "HTTP error " + response.code();
+                        getMainHandler().post(() -> callback.onNotFound(msg));
+                        return;
+                    }
+                    String body = response.body().string();
+                    String itemId = parseSearchByPathResponse(body, serverPath);
+                    if (itemId != null) {
+                        getMainHandler().post(() -> callback.onFound(itemId));
+                    } else {
+                        getMainHandler().post(() -> callback.onNotFound("No item found matching path"));
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "searchItemByPath parse error: " + e.getMessage());
+                    final String msg = "Parse error: " + e.getMessage();
+                    getMainHandler().post(() -> callback.onNotFound(msg));
                 } finally {
                     response.close();
                 }
