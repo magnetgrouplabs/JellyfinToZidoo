@@ -114,6 +114,7 @@ public class Play extends AppCompatActivity
         }).start();
     }
 
+
     // PLEX_REMOVED_START - Plex API: token and client identifier URL parameters
     // static final String tokenParameter = "X-Plex-Token=";
     // static final String clientParameter = "X-Plex-Client-Identifier=";
@@ -164,6 +165,7 @@ public class Play extends AppCompatActivity
     private volatile boolean upNextTriggered = false;
     private volatile boolean waitingForUpNext = false;
     private volatile boolean handlingPlaybackResult = false;
+    private volatile boolean awaitingPlaybackResult = false;
     private java.util.concurrent.ScheduledExecutorService progressPoller = null;
     // PLEX_REMOVED_START - Plex API: media version index
     // private int mediaIndex = -1;
@@ -228,8 +230,10 @@ public class Play extends AppCompatActivity
     protected void onRestart()
     {
         super.onRestart();
-        // Don't finish if we're handling Up Next flow or processing playback results
-        if (upNextTriggered || waitingForUpNext || handlingPlaybackResult) {
+        // Don't finish if we're awaiting/handling playback results or Up Next flow.
+        // onRestart fires BEFORE onActivityResult in the Android lifecycle, so
+        // awaitingPlaybackResult prevents premature finish before result processing.
+        if (awaitingPlaybackResult || upNextTriggered || waitingForUpNext || handlingPlaybackResult) {
             return;
         }
         this.finishWithResult();
@@ -595,10 +599,11 @@ public class Play extends AppCompatActivity
     {
         super.onStart();
 
-        // Don't re-initialize when returning from Zidoo player during Up Next flow
-        // or when returning from UpNextActivity — onActivityResult handles these cases
-        if (handlingPlaybackResult || waitingForUpNext) {
-            Log.d("Play", "onStart: skipping re-init (handlingPlaybackResult=" + handlingPlaybackResult + " waitingForUpNext=" + waitingForUpNext + ")");
+        // Don't re-initialize when returning from Zidoo player or UpNextActivity.
+        // onStart fires BEFORE onActivityResult in the Android lifecycle, so
+        // awaitingPlaybackResult prevents re-init before result processing.
+        if (awaitingPlaybackResult || handlingPlaybackResult || waitingForUpNext || upNextTriggered) {
+            Log.d("Play", "onStart: skipping re-init (awaitingPlaybackResult=" + awaitingPlaybackResult + " handlingPlaybackResult=" + handlingPlaybackResult + " waitingForUpNext=" + waitingForUpNext + " upNextTriggered=" + upNextTriggered + ")");
             return;
         }
 
@@ -625,6 +630,7 @@ public class Play extends AppCompatActivity
         {
             if(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("useZidooPlayer", true))
             {
+                awaitingPlaybackResult = true;
                 startActivityForResult(newIntent, 98);
                 // Report playback start to Jellyfin
                 if (!jellyfinItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
@@ -1225,7 +1231,15 @@ public class Play extends AppCompatActivity
                                     Log.d("Play", "Credits reached at " + currentPositionMs + "ms, triggering Up Next");
                                     upNextTriggered = true;
                                     creditSkipArmed = false;
-                                    handleEpisodeCompleted();
+                                    // Same pattern as generic stop — finishActivity triggers onActivityResult → handleEpisodeCompleted
+                                    runOnUiThread(() -> {
+                                        try {
+                                            finishActivity(98);
+                                            Log.d("Play", "Credit skip: finishActivity(98) sent");
+                                        } catch (Exception e) {
+                                            Log.w("Play", "Credit skip: finishActivity failed: " + e.getMessage());
+                                        }
+                                    });
                                 }
 
                                 lastPollPositionMs = currentPositionMs;
@@ -1238,8 +1252,6 @@ public class Play extends AppCompatActivity
                                         && (remainingMs <= 30000 || remainingMs <= 15000 || remainingMs <= 5000)) {
                                     upNextTriggered = true;
                                     Log.d("Play", "Near end of episode (" + remainingMs + "ms remaining), stopping player for Up Next");
-                                    // finishActivity(98) tells Android to finish the activity
-                                    // we launched with startActivityForResult(_, 98)
                                     runOnUiThread(() -> {
                                         try {
                                             finishActivity(98);
@@ -1333,7 +1345,7 @@ public class Play extends AppCompatActivity
             return;
         }
 
-        JellyfinApi.getNextUpWithDetails(serverUrl, accessToken, seriesId,
+        JellyfinApi.getNextUpWithDetails(serverUrl, accessToken, userId, seriesId,
             new JellyfinApi.NextUpDetailCallback() {
                 @Override
                 public void onResult(String nextItemId, String seriesName, String episodeName,
@@ -1508,6 +1520,7 @@ public class Play extends AppCompatActivity
                             // Launch Zidoo player — must be on UI thread
                             runOnUiThread(() -> {
                                 handlingPlaybackResult = false; // Reset so NEW Zidoo results are processed
+                                awaitingPlaybackResult = true;
                                 buildZidooIntent(resolvedSmbPath, 0);
                                 startActivityForResult(newIntent, 98);
                                 startProgressPoller();
@@ -1519,6 +1532,7 @@ public class Play extends AppCompatActivity
                             // Launch anyway with what we have — must be on UI thread
                             runOnUiThread(() -> {
                                 handlingPlaybackResult = false; // Reset so NEW Zidoo results are processed
+                                awaitingPlaybackResult = true;
                                 buildZidooIntent(resolvedSmbPath, 0);
                                 startActivityForResult(newIntent, 98);
                                 startProgressPoller();
@@ -1537,6 +1551,9 @@ public class Play extends AppCompatActivity
             }
             return; // Don't fall through to Zidoo result handling
         }
+
+        // Clear awaiting flag — we've received the Zidoo player result
+        awaitingPlaybackResult = false;
 
         // Ignore stale Zidoo results — if handleEpisodeCompleted is already
         // running (or completed), this is a duplicate result from finishActivity(98)
