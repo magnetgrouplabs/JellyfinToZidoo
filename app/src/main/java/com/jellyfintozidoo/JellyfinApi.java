@@ -182,6 +182,109 @@ public class JellyfinApi {
         return new IntroSkipperResult(introStart, introEnd, creditStart, creditEnd);
     }
 
+    /**
+     * Maps a Jellyfin global stream index to a Zidoo 0-based audio track index.
+     * Iterates MediaStreams, counting only Audio-type streams.
+     * Package-private for testability.
+     *
+     * @param mediaStreams JsonArray of MediaStream objects from Jellyfin item response
+     * @param jellyfinIndex The global stream index from Jellyfin
+     * @return 0-based audio index for Zidoo, or -1 if not found or not an audio stream
+     */
+    static int jellyfinToZidooAudioIndex(JsonArray mediaStreams, int jellyfinIndex) {
+        int audioCount = 0;
+        for (int i = 0; i < mediaStreams.size(); i++) {
+            JsonObject stream = mediaStreams.get(i).getAsJsonObject();
+            String type = stream.get("Type").getAsString();
+            if ("Audio".equals(type)) {
+                if (stream.get("Index").getAsInt() == jellyfinIndex) {
+                    return audioCount;
+                }
+                audioCount++;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Maps a Jellyfin global stream index to a Zidoo 1-based subtitle track index.
+     * Zidoo uses 1-based indexing for subtitles (0 = subtitles off).
+     * Package-private for testability.
+     *
+     * @param mediaStreams JsonArray of MediaStream objects from Jellyfin item response
+     * @param jellyfinIndex The global stream index from Jellyfin
+     * @return 1-based subtitle index for Zidoo, or -1 if not found or not a subtitle stream
+     */
+    static int jellyfinToZidooSubtitleIndex(JsonArray mediaStreams, int jellyfinIndex) {
+        int subtitleCount = 0;
+        for (int i = 0; i < mediaStreams.size(); i++) {
+            JsonObject stream = mediaStreams.get(i).getAsJsonObject();
+            String type = stream.get("Type").getAsString();
+            if ("Subtitle".equals(type)) {
+                if (stream.get("Index").getAsInt() == jellyfinIndex) {
+                    return subtitleCount + 1;
+                }
+                subtitleCount++;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Extracts an integer query parameter from a URL string.
+     * Uses simple string parsing to avoid Android dependency in unit tests.
+     * Package-private for testability.
+     *
+     * @param url The full URL string
+     * @param paramName The query parameter name to extract
+     * @return The integer value, or -1 if not found or not parseable
+     */
+    static int parseUrlParam(String url, String paramName) {
+        try {
+            int queryStart = url.indexOf('?');
+            if (queryStart < 0) return -1;
+            String query = url.substring(queryStart + 1);
+            String[] pairs = query.split("&");
+            for (String pair : pairs) {
+                int eq = pair.indexOf('=');
+                if (eq > 0) {
+                    String key = pair.substring(0, eq);
+                    if (paramName.equals(key)) {
+                        return Integer.parseInt(pair.substring(eq + 1));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Malformed URL or parse error
+        }
+        return -1;
+    }
+
+    /**
+     * Finds the first stream of a given type with IsDefault=true (or IsForced=true for subtitles).
+     * Returns the Jellyfin global Index of that stream.
+     * Package-private for testability.
+     *
+     * @param mediaStreams JsonArray of MediaStream objects
+     * @param type The stream type to search for ("Audio" or "Subtitle")
+     * @return The Jellyfin Index of the default/forced stream, or -1 if not found
+     */
+    static int findDefaultStreamIndex(JsonArray mediaStreams, String type) {
+        for (int i = 0; i < mediaStreams.size(); i++) {
+            JsonObject stream = mediaStreams.get(i).getAsJsonObject();
+            String streamType = stream.has("Type") ? stream.get("Type").getAsString() : "";
+            if (!type.equals(streamType)) continue;
+
+            boolean isDefault = stream.has("IsDefault") && stream.get("IsDefault").getAsBoolean();
+            boolean isForced = stream.has("IsForced") && stream.get("IsForced").getAsBoolean();
+
+            if (isDefault || isForced) {
+                return stream.get("Index").getAsInt();
+            }
+        }
+        return -1;
+    }
+
     private JellyfinApi() {
         // Prevent instantiation
     }
