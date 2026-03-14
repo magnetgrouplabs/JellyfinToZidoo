@@ -100,6 +100,30 @@ public class JellyfinApi {
         }
     }
 
+    /**
+     * Result object for parsed NextUp detail responses. Package-private for testability.
+     */
+    static class NextUpDetailResult {
+        final String itemId;
+        final String seriesName;
+        final String episodeName;
+        final int seasonNumber;
+        final int episodeNumber;
+        final String seriesId;
+        final String serverPath;
+
+        NextUpDetailResult(String itemId, String seriesName, String episodeName,
+                           int seasonNumber, int episodeNumber, String seriesId, String serverPath) {
+            this.itemId = itemId;
+            this.seriesName = seriesName;
+            this.episodeName = episodeName;
+            this.seasonNumber = seasonNumber;
+            this.episodeNumber = episodeNumber;
+            this.seriesId = seriesId;
+            this.serverPath = serverPath;
+        }
+    }
+
     private JellyfinApi() {
         // Prevent instantiation
     }
@@ -331,6 +355,119 @@ public class JellyfinApi {
         }
 
         return filename;
+    }
+
+    /**
+     * Parses a Jellyfin NextUp response (from /Shows/NextUp) into detailed episode metadata.
+     * Package-private for testability.
+     *
+     * @param jsonBody The raw JSON response body
+     * @return Parsed NextUpDetailResult, or null if Items array is empty
+     * @throws Exception if JSON parsing fails
+     */
+    static NextUpDetailResult parseNextUpDetailResponse(String jsonBody) throws Exception {
+        JsonObject root = JsonParser.parseString(jsonBody).getAsJsonObject();
+
+        if (!root.has("Items") || !root.get("Items").isJsonArray()) {
+            return null;
+        }
+
+        JsonArray items = root.getAsJsonArray("Items");
+        if (items.size() == 0) {
+            return null;
+        }
+
+        JsonObject item = items.get(0).getAsJsonObject();
+
+        String itemId = item.has("Id") && !item.get("Id").isJsonNull()
+                ? item.get("Id").getAsString() : "";
+
+        String seriesName = item.has("SeriesName") && !item.get("SeriesName").isJsonNull()
+                ? item.get("SeriesName").getAsString() : "";
+
+        String episodeName = item.has("Name") && !item.get("Name").isJsonNull()
+                ? item.get("Name").getAsString() : "";
+
+        int seasonNumber = item.has("ParentIndexNumber") && !item.get("ParentIndexNumber").isJsonNull()
+                ? item.get("ParentIndexNumber").getAsInt() : 0;
+
+        int episodeNumber = item.has("IndexNumber") && !item.get("IndexNumber").isJsonNull()
+                ? item.get("IndexNumber").getAsInt() : 0;
+
+        String seriesId = item.has("SeriesId") && !item.get("SeriesId").isJsonNull()
+                ? item.get("SeriesId").getAsString() : null;
+
+        // Extract path: try root Path first, fall back to MediaSources[0].Path
+        String serverPath = null;
+        if (item.has("Path") && !item.get("Path").isJsonNull()) {
+            serverPath = item.get("Path").getAsString();
+        }
+        if (serverPath == null || serverPath.isEmpty()) {
+            if (item.has("MediaSources") && item.get("MediaSources").isJsonArray()) {
+                JsonArray mediaSources = item.getAsJsonArray("MediaSources");
+                if (mediaSources.size() > 0) {
+                    JsonObject firstSource = mediaSources.get(0).getAsJsonObject();
+                    if (firstSource.has("Path") && !firstSource.get("Path").isJsonNull()) {
+                        serverPath = firstSource.get("Path").getAsString();
+                    }
+                }
+            }
+        }
+        if (serverPath == null) {
+            serverPath = "";
+        }
+
+        return new NextUpDetailResult(itemId, seriesName, episodeName,
+                seasonNumber, episodeNumber, seriesId, serverPath);
+    }
+
+    /**
+     * Parses a Jellyfin search response to find an item matching the expected path.
+     * Checks both root Path and MediaSources[0].Path for each item.
+     * Package-private for testability.
+     *
+     * @param jsonBody     The raw JSON response body
+     * @param expectedPath The server-side path to match
+     * @return The item ID if an exact path match is found, null otherwise
+     * @throws Exception if JSON parsing fails
+     */
+    static String parseSearchByPathResponse(String jsonBody, String expectedPath) throws Exception {
+        JsonObject root = JsonParser.parseString(jsonBody).getAsJsonObject();
+
+        if (!root.has("Items") || !root.get("Items").isJsonArray()) {
+            return null;
+        }
+
+        JsonArray items = root.getAsJsonArray("Items");
+        for (int i = 0; i < items.size(); i++) {
+            JsonObject item = items.get(i).getAsJsonObject();
+
+            // Check root Path
+            String path = null;
+            if (item.has("Path") && !item.get("Path").isJsonNull()) {
+                path = item.get("Path").getAsString();
+            }
+
+            if (expectedPath.equals(path)) {
+                return item.has("Id") ? item.get("Id").getAsString() : null;
+            }
+
+            // Check MediaSources[0].Path as fallback
+            if (item.has("MediaSources") && item.get("MediaSources").isJsonArray()) {
+                JsonArray mediaSources = item.getAsJsonArray("MediaSources");
+                if (mediaSources.size() > 0) {
+                    JsonObject firstSource = mediaSources.get(0).getAsJsonObject();
+                    if (firstSource.has("Path") && !firstSource.get("Path").isJsonNull()) {
+                        String msPath = firstSource.get("Path").getAsString();
+                        if (expectedPath.equals(msPath)) {
+                            return item.has("Id") ? item.get("Id").getAsString() : null;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
