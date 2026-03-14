@@ -60,10 +60,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Episode Intelligence
 
-- [ ] **EPIS-01**: App detects when user navigates to a different episode in Zidoo player (via getPlayStatus path changes)
-- [ ] **EPIS-02**: Each episode navigated to in Zidoo player gets its watched status reported to Jellyfin
-- [ ] **EPIS-03**: App auto-launches next episode after current episode finishes
-- [ ] **EPIS-04**: App handles season boundaries for next episode resolution
+- [x] **EPIS-01**: App detects when user navigates to a different episode in Zidoo player (via getPlayStatus path changes)
+- [x] **EPIS-02**: Each episode navigated to in Zidoo player gets its watched status reported to Jellyfin
+- [x] **EPIS-03**: App auto-launches next episode after current episode finishes
+- [x] **EPIS-04**: App handles season boundaries for next episode resolution
 
 ### Advanced Playback
 
@@ -131,10 +131,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | DEBG-02 | Phase 2 | Complete |
 | DEBG-03 | Phase 2 | Complete |
 | DEBG-04 | Phase 2 | Complete |
-| EPIS-01 | Phase 4 | Pending |
-| EPIS-02 | Phase 4 | Pending |
-| EPIS-03 | Phase 4 | Pending |
-| EPIS-04 | Phase 4 | Pending |
+| EPIS-01 | Phase 4 | Complete |
+| EPIS-02 | Phase 4 | Complete |
+| EPIS-03 | Phase 4 | Complete |
+| EPIS-04 | Phase 4 | Complete |
 | ADVP-01 | Phase 5 | Pending |
 | ADVP-02 | Phase 5 | Pending |
 | ADVP-03 | Phase 5 | Pending |

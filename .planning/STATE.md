@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-14T13:49:31.525Z"
-last_activity: 2026-03-14 -- Phase 3 bug fixes committed, E2E verified
+status: executing
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-14T14:24:47.651Z"
+last_activity: 2026-03-14 -- Phase 4 Plan 1 TDD complete, core logic tested
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 60
+  total_plans: 12
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** Native Zidoo playback of Jellyfin media with seamless watch state sync
-**Current focus:** Phase 3 Complete → Ready for Phase 4
+**Current focus:** Phase 4 Episode Intelligence in progress
 
 ## Current Position
 
-Phase: 3 of 5 (Playback Lifecycle) -- COMPLETE
-Plan: 3 of 3 -- COMPLETE
-Next: Phase 4 (Episode Intelligence)
-Status: Ready to plan Phase 4
-Last activity: 2026-03-14 -- Phase 3 bug fixes committed, E2E verified
+Phase: 4 of 5 (Episode Intelligence)
+Plan: 1 of 3 -- COMPLETE
+Next: Plan 2 (Up Next UI / wiring)
+Status: Executing Phase 4
+Last activity: 2026-03-14 -- Phase 4 Plan 1 TDD complete, core logic tested
 
-Progress: [██████░░░░] 60%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
@@ -46,6 +46,8 @@ Progress: [██████░░░░] 60%
 | 01-fork-setup | 2 | Complete |
 | 02-core-bridge | 4 | Complete |
 | 03-playback-lifecycle | 3/3 | Complete |
+| 04-episode-intelligence | 1/3 | In Progress |
+| Phase 04 P01 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -64,6 +66,10 @@ Progress: [██████░░░░] 60%
 - Episode auto-advance detected via video.path change in Zidoo getPlayStatus
 - After watched, query Jellyfin NextUp API and open episode detail page (Jellyfin Android TV lacks Next Up countdown for external players)
 - Removed relaunchCallerOrFinish — replaced with finish() + searchNextEpisode()
+- Reverse substitution takes String[][] rules directly (avoids SharedPreferences in tests)
+- parseSearchByPathResponse checks both root Path and MediaSources[0].Path for match
+- [Phase 04]: Reverse substitution takes String[][] rules directly (avoids SharedPreferences in tests)
+- [Phase 04]: parseSearchByPathResponse checks both root Path and MediaSources[0].Path for match
 
 ### Pending Todos
 
@@ -75,6 +81,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T13:49:31.522Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-episode-intelligence/04-CONTEXT.md
+Last session: 2026-03-14T14:24:37.725Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
