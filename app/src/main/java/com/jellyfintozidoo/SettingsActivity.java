@@ -380,6 +380,31 @@ public class SettingsActivity extends AppCompatActivity
         exportSettings();
     }
 
+    /**
+     * Builds the export JSON string from a preferences map.
+     * Excludes sensitive keys: jellyfin_access_token, jellyfin_user_id.
+     * Package-private for testability.
+     *
+     * @param prefsMap Map of preference key-value pairs
+     * @return Pretty-printed JSON string
+     */
+    static String buildExportJson(Map<String, ?> prefsMap)
+    {
+        LinkedHashMap<String, Object> filtered = new LinkedHashMap<>();
+        for (Map.Entry<String, ?> entry : prefsMap.entrySet())
+        {
+            String key = entry.getKey();
+            if ("jellyfin_access_token".equals(key) || "jellyfin_user_id".equals(key))
+            {
+                continue;
+            }
+            filtered.put(key, entry.getValue());
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(filtered);
+    }
+
     public void exportSettings()
     {
         FileOutputStream output = null;
@@ -402,8 +427,7 @@ public class SettingsActivity extends AppCompatActivity
                 prefsMap.put("jellyfin_password", jellyfinPassword);
             }
 
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String json = gson.toJson(prefsMap);
+            String json = buildExportJson(prefsMap);
             output.write(json.getBytes(StandardCharsets.UTF_8));
 
             Toast.makeText(getApplicationContext(), "Settings successfully exported to " + backupFile, Toast.LENGTH_LONG).show();
