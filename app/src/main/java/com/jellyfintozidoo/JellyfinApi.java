@@ -86,11 +86,13 @@ public class JellyfinApi {
         final String path;
         final long positionTicks;
         final String title;
+        final long durationTicks;
 
-        ItemResult(String path, long positionTicks, String title) {
+        ItemResult(String path, long positionTicks, String title, long durationTicks) {
             this.path = path;
             this.positionTicks = positionTicks;
             this.title = title;
+            this.durationTicks = durationTicks;
         }
     }
 
@@ -246,7 +248,13 @@ public class JellyfinApi {
             path = "";
         }
 
-        return new ItemResult(path, positionTicks, title);
+        // Extract duration (RunTimeTicks) from root
+        long durationTicks = 0;
+        if (root.has("RunTimeTicks") && !root.get("RunTimeTicks").isJsonNull()) {
+            durationTicks = root.get("RunTimeTicks").getAsLong();
+        }
+
+        return new ItemResult(path, positionTicks, title, durationTicks);
     }
 
     /**
@@ -361,6 +369,132 @@ public class JellyfinApi {
                     Log.e(TAG, "Failed to parse auth response", e);
                     final String msg = "Parse error: " + e.getMessage();
                     getMainHandler().post(() -> callback.onError(msg));
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    /**
+     * Builds the full MediaBrowser authorization header with client info and token.
+     * Used for POST requests that require full client identification.
+     *
+     * @param apiKey The access token
+     * @return The formatted full authorization header value
+     */
+    static String buildFullAuthHeader(String apiKey) {
+        return "MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", "
+                + "DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\", Token=\"" + apiKey + "\"";
+    }
+
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json");
+
+    /**
+     * Reports playback start to Jellyfin server.
+     * POST /Sessions/Playing
+     */
+    public static void reportPlaybackStart(String serverUrl, String apiKey, String itemId,
+                                            String playSessionId, SimpleCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Sessions/Playing";
+
+        JsonObject body = buildPlaybackStartBody(itemId, playSessionId);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(body.toString(), JSON_MEDIA_TYPE))
+                .build();
+
+        enqueueSimpleRequest(request, "reportPlaybackStart", callback);
+    }
+
+    /**
+     * Reports playback progress to Jellyfin server.
+     * POST /Sessions/Playing/Progress
+     */
+    public static void reportPlaybackProgress(String serverUrl, String apiKey, String itemId,
+                                               String playSessionId, long positionTicks,
+                                               boolean isPaused, SimpleCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Sessions/Playing/Progress";
+
+        JsonObject body = buildPlaybackProgressBody(itemId, playSessionId, positionTicks, isPaused);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(body.toString(), JSON_MEDIA_TYPE))
+                .build();
+
+        enqueueSimpleRequest(request, "reportPlaybackProgress", callback);
+    }
+
+    /**
+     * Reports playback stopped to Jellyfin server.
+     * POST /Sessions/Playing/Stopped
+     */
+    public static void reportPlaybackStopped(String serverUrl, String apiKey, String itemId,
+                                              String playSessionId, long positionTicks,
+                                              SimpleCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Sessions/Playing/Stopped";
+
+        JsonObject body = buildPlaybackStoppedBody(itemId, playSessionId, positionTicks);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .addHeader("Content-Type", "application/json")
+                .post(RequestBody.create(body.toString(), JSON_MEDIA_TYPE))
+                .build();
+
+        enqueueSimpleRequest(request, "reportPlaybackStopped", callback);
+    }
+
+    /**
+     * Marks an item as watched (played) on the Jellyfin server.
+     * POST /Users/{userId}/PlayedItems/{itemId}
+     */
+    public static void markAsWatched(String serverUrl, String apiKey, String userId,
+                                      String itemId, SimpleCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Users/" + userId + "/PlayedItems/" + itemId;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildFullAuthHeader(apiKey))
+                .post(RequestBody.create("", JSON_MEDIA_TYPE))
+                .build();
+
+        enqueueSimpleRequest(request, "markAsWatched", callback);
+    }
+
+    /**
+     * Enqueues an OkHttp request with simple success/error callback on the main thread.
+     * Shared by all reporting methods.
+     */
+    private static void enqueueSimpleRequest(Request request, String operationName,
+                                              SimpleCallback callback) {
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, operationName + " failed", e);
+                getMainHandler().post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful()) {
+                        final String msg = "HTTP error " + response.code();
+                        getMainHandler().post(() -> callback.onError(msg));
+                        return;
+                    }
+                    getMainHandler().post(() -> callback.onSuccess(operationName + " successful"));
                 } finally {
                     response.close();
                 }
