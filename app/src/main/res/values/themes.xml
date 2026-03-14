@@ -24,4 +24,10 @@
         <item name="colorPrimary">@color/black</item>
         <item name="android:textColorPrimary">@color/dark_gray</item>
     </style>
+    <style name="Theme.JellyfinToZidoo.UpNext" parent="Theme.JellyfinToZidoo">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@color/black</item>
+    </style>
 </resources>

@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -100,10 +102,11 @@ public class UpNextActivity extends AppCompatActivity {
         }
 
         // Start 10-second countdown
+        countdownView.setText("Playing in 10");
         countDownTimer = new CountDownTimer(10000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                countdownView.setText(String.valueOf(millisUntilFinished / 1000));
+                countdownView.setText("Playing in " + (millisUntilFinished / 1000));
             }
 
             @Override
@@ -135,6 +138,7 @@ public class UpNextActivity extends AppCompatActivity {
 
         // Default focus on Play Now for D-pad navigation
         btnPlayNow.requestFocus();
+        Log.d("UpNext", "Screen displayed: " + seriesName + " S" + seasonNumber + "E" + episodeNumber);
     }
 
     /**
