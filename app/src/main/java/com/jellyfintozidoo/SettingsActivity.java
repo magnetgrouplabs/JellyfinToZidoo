@@ -302,7 +302,45 @@ public class SettingsActivity extends AppCompatActivity
 
             showRootSettings("import_export");
 
-            Toast.makeText(getApplicationContext(), "Settings imported successfully from " + backupFile, Toast.LENGTH_LONG).show();
+            // Auto-authenticate with restored credentials to get a fresh token
+            SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            String serverUrl = defaultPrefs.getString("jellyfin_server_url", "");
+            String username = defaultPrefs.getString("jellyfin_username", "");
+            String password = SecureStorage.getInstance(getApplicationContext()).getString("jellyfin_password", "");
+
+            if (serverUrl != null && !serverUrl.isEmpty()
+                    && username != null && !username.isEmpty()
+                    && password != null && !password.isEmpty())
+            {
+                JellyfinApi.authenticate(serverUrl, username, password, new JellyfinApi.AuthCallback()
+                {
+                    @Override
+                    public void onSuccess(String accessToken, String userId, String serverName)
+                    {
+                        SecureStorage.getInstance(getApplicationContext()).edit()
+                                .putString("jellyfin_access_token", accessToken)
+                                .putString("jellyfin_user_id", userId)
+                                .apply();
+                        runOnUiThread(() ->
+                                Toast.makeText(getApplicationContext(),
+                                        "Settings imported and logged in successfully",
+                                        Toast.LENGTH_LONG).show());
+                    }
+
+                    @Override
+                    public void onError(String error)
+                    {
+                        runOnUiThread(() ->
+                                Toast.makeText(getApplicationContext(),
+                                        "Settings imported. Login failed: " + error + " — please log in manually",
+                                        Toast.LENGTH_LONG).show());
+                    }
+                });
+            }
+            else
+            {
+                Toast.makeText(getApplicationContext(), "Settings imported successfully from " + backupFile, Toast.LENGTH_LONG).show();
+            }
         }
         catch (Exception e)
         {
@@ -419,6 +457,10 @@ public class SettingsActivity extends AppCompatActivity
                                                    .collect(Collectors.toMap(Map.Entry::getKey,
                                                                              e -> (Object) e.getValue(),
                                                                              (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+            // Audit: access_token and user_id live in SecureStorage, NOT in default
+            // SharedPreferences, so prefs.getAll() should never contain them.
+            // buildExportJson() defensively excludes them regardless.
 
             // Include password from SecureStorage (not in default SharedPreferences)
             String jellyfinPassword = SecureStorage.getInstance(getApplicationContext()).getString("jellyfin_password", "");
