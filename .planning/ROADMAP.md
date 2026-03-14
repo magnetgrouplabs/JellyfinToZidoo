@@ -77,12 +77,12 @@ Plans:
   2. Each episode navigated to gets its own playback start/progress/stop reporting in Jellyfin
   3. Next episode auto-plays after current episode finishes (including across season boundaries)
   4. Multiple path substitution rules can be configured for multi-share setups
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
+- [ ] 04-01-PLAN.md -- TDD: reverse path substitution, NextUp detail parsing, searchItemByPath response parsing
+- [ ] 04-02-PLAN.md -- JellyfinApi network methods (getNextUpWithDetails, searchItemByPath) + UpNextActivity with blurred backdrop and countdown
+- [ ] 04-03-PLAN.md -- Play.java wiring (per-episode tracking, Up Next flow), multi-slot substitution settings, device deploy + E2E verification
 
 ### Phase 5: Advanced Playback
 **Goal**: Polish the playback experience with intro/credit handling, stream selection, and settings portability
