@@ -93,7 +93,7 @@ Plans:
   2. Playback stops or advances at credits using Intro Skipper outro timestamps
   3. Audio and subtitle track selections from the Jellyfin client are applied in the Zidoo player
   4. User can export settings to JSON and import them on another device
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [ ] 05-01-PLAN.md -- TDD: IntroSkipper response parsing, MediaStream index mapping, URL param extraction
@@ -111,4 +111,4 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 | 2. Core Bridge | 4/4 | Complete | 2026-03-13 |
 | 3. Playback Lifecycle | 3/3 | Complete | 2026-03-14 |
 | 4. Episode Intelligence | 3/3 | Complete | 2026-03-14 |
-| 5. Advanced Playback | 0/3 | Not started | - |
+| 5. Advanced Playback | 2/3 | In Progress|  |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-14T19:09:00Z"
-last_activity: 2026-03-14 -- Completed 05-01 TDD parsing logic
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-14T19:19:00Z"
+last_activity: 2026-03-14 -- Completed 05-02 Play.java integration
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 15
-  completed_plans: 13
-  percent: 87
+  completed_plans: 14
+  percent: 93
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-13)
 ## Current Position
 
 Phase: 5 of 5 (Advanced Playback)
-Plan: 1 of 3 -- COMPLETE
-Status: Plan 05-01 done, ready for 05-02
-Last activity: 2026-03-14 -- Completed 05-01 TDD parsing logic
+Plan: 2 of 3 -- COMPLETE
+Status: Plan 05-02 done, ready for 05-03
+Last activity: 2026-03-14 -- Completed 05-02 Play.java integration
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -49,8 +49,9 @@ Progress: [█████████░] 87%
 | Phase 04 P01 | 4min | 2 tasks | 3 files |
 | Phase 04 P02 | 3min | 2 tasks | 6 files |
 | Phase 04 P03 | multi-session | 3 tasks | 9 files |
-| 05-advanced-playback | 1/3 | In Progress |
+| 05-advanced-playback | 2/3 | In Progress |
 | Phase 05 P01 | 6min | 3 features (TDD) | 5 files |
+| Phase 05 P02 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,10 @@ Progress: [█████████░] 87%
 - parseUrlParam uses simple string parsing (not android.net.Uri) for unit test compatibility
 - findDefaultStreamIndex checks both IsDefault and IsForced in single pass
 - Extracted buildExportJson as static method from SettingsActivity for testability
+- Added DetailedCallback/getItemDetailed for MediaStreams extraction without breaking existing Callback interface
+- Credit skip overrides generic 30s-before-end stop when armed and data available
+- Audio/subtitle tracks set once per episode with 500ms delay for Zidoo track list loading
+- Binge episode path change triggers full re-fetch chain: searchItemByPath -> getItemDetailed -> getIntroSkipperSegments
 
 ### Pending Todos
 
@@ -93,6 +98,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T19:09:00Z
-Stopped at: Completed 05-01-PLAN.md
-Resume file: .planning/phases/05-advanced-playback/05-01-SUMMARY.md
+Last session: 2026-03-14T19:19:00Z
+Stopped at: Completed 05-02-PLAN.md
+Resume file: .planning/phases/05-advanced-playback/05-02-SUMMARY.md
