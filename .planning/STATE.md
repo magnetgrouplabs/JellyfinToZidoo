@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: 04-03 Task 3 device debugging — bugs fixed, user confirmed working
-last_updated: "2026-03-14T17:17:52.850Z"
-last_activity: 2026-03-14 -- Fixed 3 critical Up Next bugs, flow verified on device
+stopped_at: Phase 4 complete — all 3 plans executed, bugs fixed, committed
+last_updated: "2026-03-14T18:00:00.000Z"
+last_activity: 2026-03-14 -- Phase 4 Episode Intelligence completed (3/3 plans)
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 12
-  completed_plans: 11
-  percent: 92
+  completed_plans: 12
+  percent: 96
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** Native Zidoo playback of Jellyfin media with seamless watch state sync
-**Current focus:** Phase 4 Episode Intelligence in progress
+**Current focus:** Phase 4 complete, Phase 5 (Advanced Playback) next
 
 ## Current Position
 
-Phase: 4 of 5 (Episode Intelligence)
-Plan: 3 of 3 -- IN PROGRESS (task 3: device verification, bugs fixed, needs commit)
-Status: Executing Phase 4
-Last activity: 2026-03-14 -- Fixed onStart re-init, stale result, directPath race bugs
+Phase: 4 of 5 (Episode Intelligence) -- COMPLETE
+Plan: 3 of 3 -- COMPLETE
+Status: Phase 4 done, ready for Phase 5
+Last activity: 2026-03-14 -- Committed bug fixes, wrote 04-03-SUMMARY.md
 
-Progress: [█████████░] 92%
+Progress: [█████████░] 96%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Total execution time: ~2.5 hours
+- Total plans completed: 12
+- Total execution time: ~3 hours
 
 **By Phase:**
 
@@ -45,9 +45,10 @@ Progress: [█████████░] 92%
 | 01-fork-setup | 2 | Complete |
 | 02-core-bridge | 4 | Complete |
 | 03-playback-lifecycle | 3/3 | Complete |
-| 04-episode-intelligence | 2/3 | In Progress |
+| 04-episode-intelligence | 3/3 | Complete |
 | Phase 04 P01 | 4min | 2 tasks | 3 files |
 | Phase 04 P02 | 3min | 2 tasks | 6 files |
+| Phase 04 P03 | multi-session | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -55,7 +56,7 @@ Progress: [█████████░] 92%
 
 - Auth: Username/password login via AuthenticateByName (replaces API key)
 - Access token + user ID stored in SecureStorage after login
-- Path substitution config must account for Jellyfin server path structure (e.g., /media → smb://host/data/media, NOT smb://host/data)
+- Path substitution config must account for Jellyfin server path structure (e.g., /media -> smb://host/data/media, NOT smb://host/data)
 - SMB password may not need $ suffix (PlexToZidoo works without it)
 - Extracted enqueueSimpleRequest helper to reduce duplication across 4 reporting methods
 - buildFullAuthHeader includes Token field for authenticated POST requests
@@ -65,17 +66,17 @@ Progress: [█████████░] 92%
 - Progress poller cleanup moved from onStop to onDestroy (Zidoo player foreground triggers onStop)
 - Episode auto-advance detected via video.path change in Zidoo getPlayStatus
 - After watched, query Jellyfin NextUp API and open episode detail page (Jellyfin Android TV lacks Next Up countdown for external players)
-- Removed relaunchCallerOrFinish — replaced with finish() + searchNextEpisode()
+- Removed relaunchCallerOrFinish -- replaced with finish() + searchNextEpisode()
 - Reverse substitution takes String[][] rules directly (avoids SharedPreferences in tests)
 - parseSearchByPathResponse checks both root Path and MediaSources[0].Path for match
-- [Phase 04]: Reverse substitution takes String[][] rules directly (avoids SharedPreferences in tests)
-- [Phase 04]: parseSearchByPathResponse checks both root Path and MediaSources[0].Path for match
-- [Phase 04]: Glide BlurTransformation sampling=3 radius=25 for Zidoo memory-safe backdrop blur
-- [Phase 04]: CountDownTimer guarded by cancelled flag and canceled in onDestroy to prevent zombie launches
-- [Phase 04]: onStart() guard — skip re-init when handlingPlaybackResult or waitingForUpNext (prevents auto-replay between episodes)
-- [Phase 04]: Stale onActivityResult(98) guard — if handlingPlaybackResult already true, ignore duplicate Zidoo results
-- [Phase 04]: Capture resolvedSmbPath as local final var before async callbacks (prevents onStart overwriting directPath)
-- [Phase 04]: finishWithResult() sets result intent with current jellyfinItemId so Jellyfin client can navigate to last-played episode
+- Glide BlurTransformation sampling=3 radius=25 for Zidoo memory-safe backdrop blur
+- CountDownTimer guarded by cancelled flag and canceled in onDestroy to prevent zombie launches
+- onStart() guard -- skip re-init when handlingPlaybackResult or waitingForUpNext (prevents auto-replay between episodes)
+- Stale onActivityResult(98) guard -- if handlingPlaybackResult already true, ignore duplicate Zidoo results
+- Capture resolvedSmbPath as local final var before async callbacks (prevents onStart overwriting directPath)
+- finishWithResult() sets result intent with current jellyfinItemId so Jellyfin client can navigate to last-played episode
+- Stop-before-end approach: finishActivity(98) at ~30s remaining replaces poller-side per-episode tracking
+- Adaptive polling: self-rescheduling 3s in final 60s, 10s otherwise
 
 ### Pending Todos
 
@@ -87,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-14T17:17:52Z
-Stopped at: 04-03 Task 3 bugs fixed and verified, needs commit + summary
-Resume file: .planning/phases/04-episode-intelligence/.continue-here.md
+Last session: 2026-03-14T18:00:00Z
+Stopped at: Phase 4 complete, committed and summarized. Ready for Phase 5 planning.
+Resume file: None

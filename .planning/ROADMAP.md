@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Fork Setup** - Clean fork with package rename, Plex removal, and verified build
 - [x] **Phase 2: Core Bridge** - End-to-end intent interception through Zidoo player launch with auth, settings, and debug
 - [x] **Phase 3: Playback Lifecycle** - Bidirectional playback reporting and watch state sync with Jellyfin
-- [ ] **Phase 4: Episode Intelligence** - Seamless multi-episode tracking when navigating within Zidoo player
+- [x] **Phase 4: Episode Intelligence** - Seamless multi-episode tracking when navigating within Zidoo player
 - [ ] **Phase 5: Advanced Playback** - Intro/credit skip, audio/subtitle passthrough, and settings portability
 
 ## Phase Details
@@ -77,12 +77,12 @@ Plans:
   2. Each episode navigated to gets its own playback start/progress/stop reporting in Jellyfin
   3. Next episode auto-plays after current episode finishes (including across season boundaries)
   4. Multiple path substitution rules can be configured for multi-share setups
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
-- [ ] 04-01-PLAN.md -- TDD: reverse path substitution, NextUp detail parsing, searchItemByPath response parsing
-- [ ] 04-02-PLAN.md -- JellyfinApi network methods (getNextUpWithDetails, searchItemByPath) + UpNextActivity with blurred backdrop and countdown
-- [ ] 04-03-PLAN.md -- Play.java wiring (per-episode tracking, Up Next flow), multi-slot substitution settings, device deploy + E2E verification
+- [x] 04-01-PLAN.md -- TDD: reverse path substitution, NextUp detail parsing, searchItemByPath response parsing
+- [x] 04-02-PLAN.md -- JellyfinApi network methods (getNextUpWithDetails, searchItemByPath) + UpNextActivity with blurred backdrop and countdown
+- [x] 04-03-PLAN.md -- Play.java wiring (per-episode tracking, Up Next flow), multi-slot substitution settings, device deploy + E2E verification
 
 ### Phase 5: Advanced Playback
 **Goal**: Polish the playback experience with intro/credit handling, stream selection, and settings portability
@@ -110,5 +110,5 @@ Phases execute in numeric order: 1 > 2 > 3 > 4 > 5
 | 1. Fork Setup | 2/2 | Complete | 2026-03-13 |
 | 2. Core Bridge | 4/4 | Complete | 2026-03-13 |
 | 3. Playback Lifecycle | 3/3 | Complete | 2026-03-14 |
-| 4. Episode Intelligence | 2/3 | In Progress|  |
+| 4. Episode Intelligence | 3/3 | Complete | 2026-03-14 |
 | 5. Advanced Playback | 0/3 | Not started | - |
