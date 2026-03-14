@@ -65,6 +65,10 @@
                 <data android:mimeType="application/x-mpegurl" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".UpNextActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:exported="false" />
     </application>
 
 </manifest>
