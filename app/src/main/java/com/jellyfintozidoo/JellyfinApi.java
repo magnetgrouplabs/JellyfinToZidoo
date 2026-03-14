@@ -75,6 +75,14 @@ public class JellyfinApi {
     }
 
     /**
+     * Callback for getItemDetailed() — includes raw JSON body for MediaStreams extraction.
+     */
+    public interface DetailedCallback {
+        void onSuccess(String serverPath, long positionTicks, String title, long durationTicks, String seriesId, String rawBody);
+        void onError(String error);
+    }
+
+    /**
      * Callback for simple responses like testConnection().
      */
     public interface SimpleCallback {
@@ -669,6 +677,51 @@ public class JellyfinApi {
                     String body = response.body() != null ? response.body().string() : "";
                     ItemResult result = parseItemResponse(body);
                     getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks, result.title, result.durationTicks, result.seriesId));
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse item response", e);
+                    final String msg = "Parse error: " + e.getMessage();
+                    getMainHandler().post(() -> callback.onError(msg));
+                } finally {
+                    response.close();
+                }
+            }
+        });
+    }
+
+    /**
+     * Fetches a Jellyfin item with full details including raw JSON body.
+     * Same as getItem() but passes raw response body for MediaStreams extraction.
+     * Callback runs on the main (UI) thread.
+     */
+    public static void getItemDetailed(String serverUrl, String apiKey, String itemId, DetailedCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Items/" + itemId + "?Fields=Path,MediaSources";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", buildAuthHeader(apiKey))
+                .build();
+
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "getItemDetailed failed", e);
+                getMainHandler().post(() -> callback.onError("Network error: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try {
+                    if (!response.isSuccessful()) {
+                        final String msg = "HTTP error " + response.code();
+                        getMainHandler().post(() -> callback.onError(msg));
+                        return;
+                    }
+
+                    String body = response.body() != null ? response.body().string() : "";
+                    ItemResult result = parseItemResponse(body);
+                    getMainHandler().post(() -> callback.onSuccess(result.path, result.positionTicks,
+                            result.title, result.durationTicks, result.seriesId, body));
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to parse item response", e);
                     final String msg = "Parse error: " + e.getMessage();
