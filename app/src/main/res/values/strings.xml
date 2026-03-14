@@ -48,4 +48,9 @@
     <!-- Play activity -->
     <string name="play_button_title">Play</string>
 
+    <!-- Up Next activity -->
+    <string name="up_next_label">Up Next</string>
+    <string name="play_now">Play Now</string>
+    <string name="cancel">Cancel</string>
+
 </resources>
