@@ -1,0 +1,86 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ["bug"]
+body:
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have searched the [existing issues](https://github.com/magnetgrouplabs/JellyfinToZidoo/issues) and confirmed this is not a duplicate
+          required: true
+        - label: I am running the latest version of JellyfinToZidoo
+          required: true
+        - label: I have redacted any personal information (IP addresses, usernames, passwords, file paths, server URLs) from this report
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: JellyfinToZidoo version
+      description: Found in Settings > Version
+      placeholder: "3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: zidoo-model
+    attributes:
+      label: Zidoo model and firmware version
+      placeholder: "Z9X Pro, firmware 6.4.60"
+    validations:
+      required: true
+
+  - type: input
+    id: jellyfin-client
+    attributes:
+      label: Jellyfin client used
+      placeholder: "Jellyfin for Android TV / Moonfin / Findroid / other"
+    validations:
+      required: true
+
+  - type: input
+    id: jellyfin-server
+    attributes:
+      label: Jellyfin server version
+      placeholder: "10.9.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug
+      placeholder: What happened? What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Open Jellyfin client
+        2. Play a video
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: debug
+    attributes:
+      label: Debug output
+      description: If applicable, enable Debug data in settings and paste the debug screen info here. Make sure to redact any personal information such as IP addresses, file paths, or usernames.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other relevant details (screenshots, logs, etc.)
+    validations:
+      required: false

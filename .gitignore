@@ -28,3 +28,11 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# AI/development tooling
+.planning/
+.claude/
+CLAUDE.md
+handoff.md
+JellyfinToZidoo-ClaudeCode-Prompt.md
+icon-preview.html
