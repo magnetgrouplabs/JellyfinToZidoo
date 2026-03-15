@@ -19,7 +19,7 @@ body:
     attributes:
       label: JellyfinToZidoo version
       description: Found in Settings > Version
-      placeholder: "3.0"
+      placeholder: "2026.03.1"
     validations:
       required: true
 
