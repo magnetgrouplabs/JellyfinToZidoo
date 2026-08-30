@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Blurred series backdrop -->
+    <ImageView
+        android:id="@+id/backdrop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
+
+    <!-- Dark gradient overlay -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#B3000000" />
+
+    <!-- Main content — bottom-aligned like streaming apps -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="48dp">
+
+        <!-- "Up Next" label — top left -->
+        <TextView
+            android:id="@+id/upNextLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:text="@string/up_next_label"
+            android:textColor="#80FFFFFF"
+            android:textSize="16sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.15" />
+
+        <!-- Bottom content area -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:gravity="bottom">
+
+            <!-- Episode thumbnail — left side -->
+            <ImageView
+                android:id="@+id/episodeThumbnail"
+                android:layout_width="280dp"
+                android:layout_height="158dp"
+                android:scaleType="centerCrop"
+                android:contentDescription="@string/up_next_label"
+                android:background="@drawable/thumbnail_border" />
+
+            <!-- Info + buttons — right of thumbnail -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="24dp"
+                android:layout_gravity="bottom"
+                android:orientation="vertical">
+
+                <!-- Series name -->
+                <TextView
+                    android:id="@+id/seriesName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- Episode info (S01E02 - Title) -->
+                <TextView
+                    android:id="@+id/episodeInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#B3FFFFFF"
+                    android:textSize="18sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- Countdown text -->
+                <TextView
+                    android:id="@+id/countdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Playing in 10"
+                    android:textColor="#80FFFFFF"
+                    android:textSize="14sp" />
+
+                <!-- Buttons row -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal">
+
+                    <!-- Play Now — solid Jellyfin purple button -->
+                    <Button
+                        android:id="@+id/btnPlayNow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:minWidth="160dp"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:text="@string/play_now"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:textAllCaps="false"
+                        android:background="@drawable/btn_play_now"
+                        android:focusable="true"
+                        android:nextFocusRight="@id/btnCancel" />
+
+                    <!-- Cancel — outlined ghost button -->
+                    <Button
+                        android:id="@+id/btnCancel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:minWidth="120dp"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/cancel"
+                        android:textColor="#CCCCCC"
+                        android:textSize="16sp"
+                        android:textAllCaps="false"
+                        android:background="@drawable/btn_cancel"
+                        android:focusable="true"
+                        android:nextFocusLeft="@id/btnPlayNow" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</FrameLayout>
