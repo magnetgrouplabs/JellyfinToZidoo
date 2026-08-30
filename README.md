@@ -165,7 +165,7 @@ MIT. See [LICENSE](LICENSE) for details.
 </p>
 
 <p align="center">
-  <a href="https://buymeacoffee.com/anthonymkz">
-    <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=anthonymkz&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me A Coffee"/>
+  <a href="https://buymeacoffee.com/example-user">
+    <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=example-user&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me A Coffee"/>
   </a>
 </p>
