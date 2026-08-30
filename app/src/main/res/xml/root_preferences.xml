@@ -1,0 +1,198 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_preferences">
+
+    <PreferenceCategory app:title="@string/jellyfin_server_settings">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="jellyfin_server_url"
+            android:title="@string/jellyfin_server_url_title"
+            android:summary="@string/jellyfin_server_url_summary"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="jellyfin_username"
+            android:title="@string/jellyfin_username_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="jellyfin_password"
+            android:title="@string/jellyfin_password_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+        <Preference
+            android:key="jellyfin_login"
+            android:title="@string/jellyfin_login_title"
+            android:summary="@string/jellyfin_login_summary" />
+
+    </PreferenceCategory>
+
+    <Preference
+        android:key="version"
+        android:persistent="false"
+        android:title="@string/version_settings"
+        android:summary="@string/versionName" />
+
+    <PreferenceCategory app:title="@string/general_settings">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="debug"
+            android:title="@string/debug_title" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/player_settings">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="useZidooPlayer"
+            android:title="@string/useZidooPlayer_title" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="showTitle"
+            android:title="@string/showTitle_title"
+            android:dependency="useZidooPlayer" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="auto_play"
+            android:title="@string/auto_play_title"
+            android:dependency="useZidooPlayer" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_intros"
+            android:title="@string/skip_intros_title"
+            android:dependency="useZidooPlayer" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_credits"
+            android:title="@string/skip_credits_title"
+            android:dependency="useZidooPlayer" />
+
+    </PreferenceCategory>
+
+    <!-- PLEX_REMOVED_START - Plex library include/exclude preferences (Plex-specific library selection) -->
+    <!--
+    <PreferenceCategory app:title="@string/plex_settings">
+
+        <EditTextPreference
+            android:defaultValue="*"
+            android:key="libraries"
+            android:title="@string/libraries_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="exclude_libraries"
+            android:title="@string/exclude_libraries_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+    -->
+    <!-- PLEX_REMOVED_END -->
+
+    <PreferenceCategory app:title="@string/substitution_settings">
+
+        <Preference
+            android:key="substitution_description"
+            android:persistent="false"
+            android:title="@string/substitution_description"
+            android:selectable="false" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/substitution_rule_2_title">
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="path_to_replace_02"
+            android:title="@string/path_to_replace"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="replaced_with_02"
+            android:title="@string/replaced_with"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbUsername_02"
+            android:title="@string/smbUsername_title"
+            app:useSimpleSummaryProvider="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="smbPassword_02"
+            android:title="@string/smbPassword_title"
+            app:useSimpleSummaryProvider="false"
+            android:singleLine="true"
+            android:inputType="textPassword" />
+
+        <Preference
+            android:key="substitution_link"
+            android:title="@string/substitution_link_more" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/import_export_settings">
+
+        <Preference
+            android:key="import_export_description"
+            android:persistent="false"
+            android:title="@string/import_export_description"
+            android:selectable="false" />
+
+        <Preference
+            android:key="import_export"
+            android:persistent="false"
+            android:title="Import/Export"
+            android:layout="@layout/import_export"
+            android:selectable="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
