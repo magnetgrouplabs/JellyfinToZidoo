@@ -183,4 +183,106 @@ public class MediaStreamParsingTest {
 
         assertEquals(-1, JellyfinApi.findDefaultStreamIndex(streams, "Subtitle"));
     }
+
+    // Hardening: malformed MediaStreams must not throw
+
+    private JsonObject bare() {
+        return new JsonObject();
+    }
+
+    @Test
+    public void audioIndex_streamWithoutType_isSkipped() {
+        JsonArray streams = new JsonArray();
+        streams.add(bare());
+        streams.add(stream(1, "Audio"));
+
+        assertEquals(0, JellyfinApi.jellyfinToZidooAudioIndex(streams, 1));
+    }
+
+    @Test
+    public void audioIndex_nullType_isSkipped() {
+        JsonArray streams = new JsonArray();
+        JsonObject nullType = new JsonObject();
+        nullType.addProperty("Index", 0);
+        nullType.add("Type", com.google.gson.JsonNull.INSTANCE);
+        streams.add(nullType);
+        streams.add(stream(1, "Audio"));
+
+        assertEquals(0, JellyfinApi.jellyfinToZidooAudioIndex(streams, 1));
+    }
+
+    @Test
+    public void audioIndex_audioWithoutIndex_countsButNeverMatches() {
+        JsonArray streams = new JsonArray();
+        JsonObject noIndex = new JsonObject();
+        noIndex.addProperty("Type", "Audio");
+        streams.add(noIndex);
+        streams.add(stream(7, "Audio"));
+
+        assertEquals(-1, JellyfinApi.jellyfinToZidooAudioIndex(streams, -1));
+        assertEquals(1, JellyfinApi.jellyfinToZidooAudioIndex(streams, 7));
+    }
+
+    @Test
+    public void audioIndex_nonObjectElements_areSkipped() {
+        JsonArray streams = new JsonArray();
+        streams.add(com.google.gson.JsonNull.INSTANCE);
+        streams.add("just a string");
+        streams.add(stream(1, "Audio"));
+
+        assertEquals(0, JellyfinApi.jellyfinToZidooAudioIndex(streams, 1));
+    }
+
+    @Test
+    public void audioIndex_nullArray_returnsNegativeOne() {
+        assertEquals(-1, JellyfinApi.jellyfinToZidooAudioIndex(null, 1));
+    }
+
+    @Test
+    public void subtitleIndex_streamWithoutType_isSkipped() {
+        JsonArray streams = new JsonArray();
+        streams.add(bare());
+        streams.add(stream(2, "Subtitle"));
+
+        assertEquals(1, JellyfinApi.jellyfinToZidooSubtitleIndex(streams, 2));
+    }
+
+    @Test
+    public void subtitleIndex_nonObjectElements_areSkipped() {
+        JsonArray streams = new JsonArray();
+        streams.add(com.google.gson.JsonNull.INSTANCE);
+        streams.add(stream(2, "Subtitle"));
+
+        assertEquals(1, JellyfinApi.jellyfinToZidooSubtitleIndex(streams, 2));
+    }
+
+    @Test
+    public void subtitleIndex_nullArray_returnsNegativeOne() {
+        assertEquals(-1, JellyfinApi.jellyfinToZidooSubtitleIndex(null, 1));
+    }
+
+    @Test
+    public void findDefaultStreamIndex_defaultStreamWithoutIndex_returnsNegativeOne() {
+        JsonArray streams = new JsonArray();
+        JsonObject noIndex = new JsonObject();
+        noIndex.addProperty("Type", "Audio");
+        noIndex.addProperty("IsDefault", true);
+        streams.add(noIndex);
+
+        assertEquals(-1, JellyfinApi.findDefaultStreamIndex(streams, "Audio"));
+    }
+
+    @Test
+    public void findDefaultStreamIndex_nonObjectElements_areSkipped() {
+        JsonArray streams = new JsonArray();
+        streams.add(com.google.gson.JsonNull.INSTANCE);
+        streams.add(stream(2, "Audio", true, false));
+
+        assertEquals(2, JellyfinApi.findDefaultStreamIndex(streams, "Audio"));
+    }
+
+    @Test
+    public void findDefaultStreamIndex_nullArray_returnsNegativeOne() {
+        assertEquals(-1, JellyfinApi.findDefaultStreamIndex(null, "Audio"));
+    }
 }

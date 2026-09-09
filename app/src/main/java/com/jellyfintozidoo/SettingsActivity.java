@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.InputType;
@@ -38,9 +39,10 @@ import java.util.stream.Collectors;
 public class SettingsActivity extends AppCompatActivity
 {
     private final String backupFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/JellyfinToZidooSettings.txt";
-    private static SettingsFragment settingsFragment;
-    private static String settingsRootKey;
-    private static String scrollToPreference;
+    // Instance fields, so the fragment and the activity are released when the screen closes
+    private SettingsFragment settingsFragment;
+    private String settingsRootKey;
+    private String scrollToPreference;
     private static final int PERMISSION_REQUEST_IMPORT = 1;
     private static final int PERMISSION_REQUEST_EXPORT = 2;
     private final String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -49,6 +51,14 @@ public class SettingsActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
+        // Drop any plaintext password an older build left in the default preferences
+        SecureStorage.removeLegacyPlaintextPassword(getApplicationContext());
+
+        // Stable per device id for the Jellyfin client identity
+        String deviceId = SecureStorage.getDeviceId(getApplicationContext());
+        JellyfinApi.setClientIdentity(Build.MODEL, deviceId, BuildConfig.VERSION_NAME);
+
         setContentView(R.layout.settings_activity);
         if (savedInstanceState == null)
         {
@@ -64,10 +74,11 @@ public class SettingsActivity extends AppCompatActivity
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
         {
-            settingsFragment = this;
-            settingsRootKey = rootKey;
+            SettingsActivity activity = (SettingsActivity) requireActivity();
+            activity.settingsFragment = this;
+            activity.settingsRootKey = rootKey;
 
-            showRootSettings(null);
+            activity.showRootSettings(null);
         }
 
         @SuppressLint("RestrictedApi")
@@ -76,10 +87,11 @@ public class SettingsActivity extends AppCompatActivity
         {
             super.onBindPreferences();
 
-            if(scrollToPreference != null)
+            SettingsActivity activity = (SettingsActivity) getActivity();
+            if(activity != null && activity.scrollToPreference != null)
             {
-                scrollToPreference(scrollToPreference);
-                scrollToPreference = null;
+                scrollToPreference(activity.scrollToPreference);
+                activity.scrollToPreference = null;
             }
         }
     }
@@ -93,6 +105,12 @@ public class SettingsActivity extends AppCompatActivity
     @Override
     public void onBackPressed()
     {
+        if (settingsFragment == null)
+        {
+            super.onBackPressed();
+            return;
+        }
+
         Preference substitutionLink = settingsFragment.findPreference("substitution_link");
         if (substitutionLink != null)
         {
@@ -104,8 +122,13 @@ public class SettingsActivity extends AppCompatActivity
         }
     }
 
-    public static void showRootSettings(@Nullable String scrollToPref)
+    public void showRootSettings(@Nullable String scrollToPref)
     {
+        if (settingsFragment == null)
+        {
+            return;
+        }
+
         scrollToPreference = scrollToPref;
         settingsFragment.setPreferencesFromResource(R.xml.root_preferences, settingsRootKey);
         setSmbPasswordPreference();
@@ -125,7 +148,7 @@ public class SettingsActivity extends AppCompatActivity
         }
     }
 
-    private static void setJellyfinPasswordPreference()
+    private void setJellyfinPasswordPreference()
     {
         EditTextPreference passwordPref = settingsFragment.findPreference("jellyfin_password");
         if (passwordPref == null) return;
@@ -133,9 +156,10 @@ public class SettingsActivity extends AppCompatActivity
         Context context = settingsFragment.requireContext();
         SharedPreferences securePrefs = SecureStorage.getInstance(context);
 
-        // Load existing value from secure storage
+        // The real password stays in secure storage and is never written into the
+        // preference, which would put it in plaintext in the default preferences file.
+        // Only the summary reflects whether one is set.
         String existing = securePrefs.getString("jellyfin_password", "");
-        passwordPref.setText(existing);
         passwordPref.setSummary((existing != null && !existing.isEmpty()) ? "********" : "Not set");
 
         // Mask input in the edit dialog
@@ -163,7 +187,7 @@ public class SettingsActivity extends AppCompatActivity
         }
     }
 
-    private static void setJellyfinServerUrlPreference()
+    private void setJellyfinServerUrlPreference()
     {
         EditTextPreference serverUrlPref = settingsFragment.findPreference("jellyfin_server_url");
         if (serverUrlPref == null) return;
@@ -185,7 +209,7 @@ public class SettingsActivity extends AppCompatActivity
         });
     }
 
-    private static void setLoginPreference()
+    private void setLoginPreference()
     {
         Preference loginPref = settingsFragment.findPreference("jellyfin_login");
         if (loginPref == null) return;
@@ -232,7 +256,7 @@ public class SettingsActivity extends AppCompatActivity
         });
     }
 
-    public static void setSmbPasswordPreference()
+    public void setSmbPasswordPreference()
     {
         String[] pref_index = {"", "_02", "_03", "_04", "_05", "_06", "_07", "_08", "_09", "_10"};
         for (String s: pref_index)
@@ -332,7 +356,7 @@ public class SettingsActivity extends AppCompatActivity
                     {
                         runOnUiThread(() ->
                                 Toast.makeText(getApplicationContext(),
-                                        "Settings imported. Login failed: " + error + " — please log in manually",
+                                        "Settings imported. Login failed: " + error + ", please log in manually",
                                         Toast.LENGTH_LONG).show());
                     }
                 });
@@ -376,7 +400,7 @@ public class SettingsActivity extends AppCompatActivity
             EditTextPreference passwordPref = settingsFragment.findPreference("jellyfin_password");
             if(passwordPref != null)
             {
-                passwordPref.setText(value);
+                // Summary only, the value itself stays in secure storage
                 passwordPref.setSummary(value.isEmpty() ? "Not set" : "********");
             }
             return;
@@ -419,20 +443,39 @@ public class SettingsActivity extends AppCompatActivity
     }
 
     /**
+     * True for any preference key that holds a password: the Jellyfin password and every
+     * SMB password slot. Package-private for testability.
+     *
+     * @param key Preference key
+     * @return true when the key holds a password
+     */
+    static boolean isPasswordKey(String key)
+    {
+        return key != null && ("jellyfin_password".equals(key) || key.startsWith("smbPassword"));
+    }
+
+    /**
      * Builds the export JSON string from a preferences map.
-     * Excludes sensitive keys: jellyfin_access_token, jellyfin_user_id.
+     * Always excludes jellyfin_access_token and jellyfin_user_id. Passwords are excluded
+     * unless includePasswords is true, because the export file is plain text in a folder
+     * any app with storage access can read.
      * Package-private for testability.
      *
-     * @param prefsMap Map of preference key-value pairs
+     * @param prefsMap         Map of preference key-value pairs
+     * @param includePasswords Whether the Jellyfin and SMB passwords go into the file
      * @return Pretty-printed JSON string
      */
-    static String buildExportJson(Map<String, ?> prefsMap)
+    static String buildExportJson(Map<String, ?> prefsMap, boolean includePasswords)
     {
         LinkedHashMap<String, Object> filtered = new LinkedHashMap<>();
         for (Map.Entry<String, ?> entry : prefsMap.entrySet())
         {
             String key = entry.getKey();
             if ("jellyfin_access_token".equals(key) || "jellyfin_user_id".equals(key))
+            {
+                continue;
+            }
+            if (!includePasswords && isPasswordKey(key))
             {
                 continue;
             }
@@ -462,17 +505,26 @@ public class SettingsActivity extends AppCompatActivity
             // SharedPreferences, so prefs.getAll() should never contain them.
             // buildExportJson() defensively excludes them regardless.
 
-            // Include password from SecureStorage (not in default SharedPreferences)
-            String jellyfinPassword = SecureStorage.getInstance(getApplicationContext()).getString("jellyfin_password", "");
-            if(jellyfinPassword != null && !jellyfinPassword.isEmpty())
+            // Passwords are left out unless the user has turned the option on
+            boolean includePasswords = prefs.getBoolean("export_include_passwords", false);
+
+            if(includePasswords)
             {
-                prefsMap.put("jellyfin_password", jellyfinPassword);
+                // The Jellyfin password lives in SecureStorage, not in the default preferences
+                String jellyfinPassword = SecureStorage.getInstance(getApplicationContext()).getString("jellyfin_password", "");
+                if(jellyfinPassword != null && !jellyfinPassword.isEmpty())
+                {
+                    prefsMap.put("jellyfin_password", jellyfinPassword);
+                }
             }
 
-            String json = buildExportJson(prefsMap);
+            String json = buildExportJson(prefsMap, includePasswords);
             output.write(json.getBytes(StandardCharsets.UTF_8));
 
-            Toast.makeText(getApplicationContext(), "Settings successfully exported to " + backupFile, Toast.LENGTH_LONG).show();
+            String exportedMessage = includePasswords
+                    ? "Settings and passwords exported to " + backupFile
+                    : "Settings exported to " + backupFile + " (passwords excluded)";
+            Toast.makeText(getApplicationContext(), exportedMessage, Toast.LENGTH_LONG).show();
         }
         catch (Exception e)
         {
@@ -510,9 +562,13 @@ public class SettingsActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if(requestCode == PERMISSION_REQUEST_IMPORT || requestCode == PERMISSION_REQUEST_EXPORT)
         {
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED)
+            if(grantResults.length >= 2
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && grantResults[1] == PackageManager.PERMISSION_GRANTED)
             {
                 if(requestCode == PERMISSION_REQUEST_IMPORT)
                 {

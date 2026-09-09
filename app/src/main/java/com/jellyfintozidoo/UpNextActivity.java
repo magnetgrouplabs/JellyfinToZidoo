@@ -25,7 +25,7 @@ import jp.wasabeef.glide.transformations.BlurTransformation;
  *
  * Launch with intent extras:
  *   seriesName, episodeName, seasonNumber, episodeNumber,
- *   nextItemId, serverPath, seriesId, backdropUrl, serverUrl, accessToken
+ *   nextItemId, serverPath, seriesId, backdropUrl, serverUrl
  *
  * Returns RESULT_OK with extras (nextItemId, serverPath, seriesId, episodeName,
  * seasonNumber, episodeNumber) when countdown finishes or Play Now is pressed.
@@ -60,7 +60,6 @@ public class UpNextActivity extends AppCompatActivity {
         seriesId = intent.getStringExtra("seriesId");
         String backdropUrl = intent.getStringExtra("backdropUrl");
         String serverUrl = intent.getStringExtra("serverUrl");
-        String accessToken = intent.getStringExtra("accessToken");
 
         // Bind views
         ImageView backdropImageView = findViewById(R.id.backdrop);

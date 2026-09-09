@@ -1,23 +1,142 @@
 package com.jellyfintozidoo;
 
+import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for JellyfinApi auth header construction and JSON response parsing.
+ * Unit tests for JellyfinApi auth header construction, URL building and JSON response parsing.
  */
 public class JellyfinApiTest {
 
+    @After
+    public void restoreClientIdentity() {
+        JellyfinApi.resetClientIdentity();
+    }
+
+    // Auth header
+
     @Test
-    public void buildAuthHeader_formatsCorrectly() {
+    public void buildAuthHeader_sendsFullClientIdentityWithToken() {
         String header = JellyfinApi.buildAuthHeader("testkey123");
-        assertEquals("MediaBrowser Token=\"testkey123\"", header);
+        assertEquals("MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", "
+                + "DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\", Token=\"testkey123\"", header);
     }
 
     @Test
     public void buildAuthHeader_withSpecialChars() {
         String header = JellyfinApi.buildAuthHeader("abc-123_XYZ");
-        assertEquals("MediaBrowser Token=\"abc-123_XYZ\"", header);
+        assertTrue(header.endsWith("Token=\"abc-123_XYZ\""));
+        assertTrue(header.startsWith("MediaBrowser Client=\"JellyfinToZidoo\""));
+    }
+
+    @Test
+    public void buildAuthHeader_matchesBuildFullAuthHeader() {
+        assertEquals(JellyfinApi.buildFullAuthHeader("tok"), JellyfinApi.buildAuthHeader("tok"));
+    }
+
+    @Test
+    public void buildClientIdentityHeader_carriesNoToken() {
+        String header = JellyfinApi.buildClientIdentityHeader();
+        assertEquals("MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", "
+                + "DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\"", header);
+        assertFalse(header.contains("Token"));
+    }
+
+    @Test
+    public void setClientIdentity_appliesToBothHeaders() {
+        JellyfinApi.setClientIdentity("Zidoo Z9X", "device-abc-001", "2026.03.1");
+
+        assertEquals("MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo Z9X\", "
+                + "DeviceId=\"device-abc-001\", Version=\"2026.03.1\"",
+                JellyfinApi.buildClientIdentityHeader());
+        assertEquals("MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo Z9X\", "
+                + "DeviceId=\"device-abc-001\", Version=\"2026.03.1\", Token=\"tok\"",
+                JellyfinApi.buildAuthHeader("tok"));
+    }
+
+    @Test
+    public void setClientIdentity_nullOrBlankKeepsCurrentValue() {
+        JellyfinApi.setClientIdentity("Zidoo Z9X", "device-abc-001", "2026.03.1");
+        JellyfinApi.setClientIdentity(null, "   ", null);
+
+        assertEquals("MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo Z9X\", "
+                + "DeviceId=\"device-abc-001\", Version=\"2026.03.1\"",
+                JellyfinApi.buildClientIdentityHeader());
+    }
+
+    @Test
+    public void resetClientIdentity_restoresDefaults() {
+        JellyfinApi.setClientIdentity("Other", "other-id", "9.9.9");
+        JellyfinApi.resetClientIdentity();
+
+        assertEquals("MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", "
+                + "DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\"",
+                JellyfinApi.buildClientIdentityHeader());
+    }
+
+    // Mark as watched URL (Jellyfin 12.0 route)
+
+    @Test
+    public void buildMarkAsWatchedUrl_usesUserPlayedItems() {
+        assertEquals("http://server:8096/UserPlayedItems/item-42",
+                JellyfinApi.buildMarkAsWatchedUrl("http://server:8096", "item-42"));
+    }
+
+    @Test
+    public void buildMarkAsWatchedUrl_stripsTrailingSlash() {
+        assertEquals("http://server:8096/UserPlayedItems/item-42",
+                JellyfinApi.buildMarkAsWatchedUrl("http://server:8096/", "item-42"));
+    }
+
+    @Test
+    public void buildMarkAsWatchedUrl_dropsObsoletePlayedItemsRoute() {
+        String url = JellyfinApi.buildMarkAsWatchedUrl("http://server:8096", "item-42");
+        assertFalse(url.contains("/Users/"));
+        assertFalse(url.contains("/PlayedItems/"));
+    }
+
+    // Error body logging and retry policy
+
+    @Test
+    public void truncateForLog_keepsShortBodiesWhole() {
+        assertEquals("{\"Message\":\"nope\"}", JellyfinApi.truncateForLog("{\"Message\":\"nope\"}"));
+    }
+
+    @Test
+    public void truncateForLog_capsAtTwoHundredCharacters() {
+        StringBuilder body = new StringBuilder();
+        for (int i = 0; i < 500; i++) body.append('x');
+
+        String logged = JellyfinApi.truncateForLog(body.toString());
+        assertEquals(200, logged.length());
+        assertEquals(JellyfinApi.ERROR_BODY_LOG_LIMIT, logged.length());
+    }
+
+    @Test
+    public void truncateForLog_nullBecomesEmptyString() {
+        assertEquals("", JellyfinApi.truncateForLog(null));
+    }
+
+    @Test
+    public void truncateForLog_flattensNewlines() {
+        assertEquals("line one line two", JellyfinApi.truncateForLog("line one\nline two"));
+    }
+
+    @Test
+    public void shouldRetryOnNetworkFailure_onlyStoppedAndMarkAsWatched() {
+        assertTrue(JellyfinApi.shouldRetryOnNetworkFailure("reportPlaybackStopped"));
+        assertTrue(JellyfinApi.shouldRetryOnNetworkFailure("markAsWatched"));
+        assertFalse(JellyfinApi.shouldRetryOnNetworkFailure("reportPlaybackStart"));
+        assertFalse(JellyfinApi.shouldRetryOnNetworkFailure("reportPlaybackProgress"));
+        assertFalse(JellyfinApi.shouldRetryOnNetworkFailure("somethingElse"));
+    }
+
+    // Path search fallback window
+
+    @Test
+    public void searchByPathLimit_isFiftyForTwelveZeroReranking() {
+        assertEquals(50, JellyfinApi.SEARCH_BY_PATH_LIMIT);
     }
 
     @Test
