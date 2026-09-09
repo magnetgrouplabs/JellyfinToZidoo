@@ -45,7 +45,7 @@ Play media from any Jellyfin client and the Zidoo handles playback with full har
 | **Up Next** | Countdown screen between episodes with Play Now / Cancel, just like streaming apps |
 | **Binge watching** | When Zidoo auto-advances to the next file, each episode is tracked individually in Jellyfin |
 | **Intro skip** | Automatically skips intros using data from Jellyfin's [Intro Skipper](https://github.com/intro-skipper/intro-skipper) plugin |
-| **Credit skip** | Stops playback at credits and triggers Up Next early |
+| **Credit skip** | When Intro Skipper has marked a credits segment, stops playback early and triggers Up Next; otherwise the episode plays to the end and Up Next follows as usual |
 | **Audio/subtitle passthrough** | Track selections from the Jellyfin client carry through to the Zidoo player |
 | **Disarm-on-seek** | Manual seeking disables auto-skip so your intent is respected |
 | **Path substitution** | Up to 10 configurable rules to map Jellyfin server paths to SMB URIs |
@@ -130,7 +130,7 @@ JellyfinToZidoo should work with **any Jellyfin client** that supports sending e
 3. Path substitution converts the server path to an SMB URI
 4. The native Zidoo player launches with the SMB path, resume position, and audio/subtitle track selections
 5. A background poller monitors playback and reports progress back to Jellyfin
-6. When an episode ends, the **Up Next** screen appears with a countdown to the next episode
+6. If Intro Skipper has marked a credits segment for the episode, playback stops early there and the **Up Next** screen appears with a countdown to the next episode; otherwise the episode plays through to the end and **Up Next** appears right after
 
 ## Building from Source
 
