@@ -1,33 +1,25 @@
-# 2026.09.1: upgraded and optimized for Jellyfin 12
+# 2026.09.2: playback polish
 
-**This version requires Jellyfin server 12.0 or later.** If your server is on Jellyfin 10.11 or earlier, do not upgrade: stay on release 2026.03.1.
+**Still requires Jellyfin server 12.0 or later, same as 2026.09.1.**
 
 ## What changed
 
-**Jellyfin 12**
-- Intro skip and credit skip now read Jellyfin's native media segments, since Intro Skipper 12 removed the old endpoint this app used
-- Mark as watched moved to the current Jellyfin route
-- The app now sends its full client identity (app, device, device id, version) on every request instead of a bare token
-- Each device now reports its own device id and real app version to the server, instead of a shared hardcoded value
+**Play from beginning now works**
+- Choosing "Play from beginning" in the Jellyfin client on a partially watched item used to resume at the saved position instead. The app now honors the client's explicit start position, including zero, and only falls back to the server's resume point when the client sends none.
 
-**Security**
-- Your Jellyfin password is no longer written to the unencrypted preferences file
-- Passwords are excluded from settings export by default; a new switch lets you include them if you want to
-- SMB credentials and API tokens are masked in logs and on the debug screen
+**Pausing right after playback starts no longer resumes on its own**
+- The app now waits until the player is confirmed playing before applying the audio and subtitle track selection, and it reports the paused state to Jellyfin instead of always reporting playing.
 
-**Reliability**
-- Fixed playback reporting sometimes running twice after Up Next
-- Fixed progress being attributed to the previous episode when a binge lookup fails
-- Path substitution rules with commas now work correctly in both directions and match by prefix
-- Fixed handling of special characters in SMB usernames, passwords, and replacement paths
-- Added a guard against crashes on malformed segment responses from the server
-- Playback stop and mark as watched now retry once if the final request fails
+**Smarter early stop**
+- Previously, every episode stopped 30 seconds before the end so Up Next could appear, even when there was no credits data. This sometimes cut off cold endings and mid-credits scenes.
+- Now the episode only stops early when Intro Skipper has marked a credits segment for it. Otherwise the episode plays all the way through, and Up Next appears right after.
 
-**Build**
-- Release APKs are now signed, so they install by sideload without a security warning
-- Continuous integration now runs the unit tests and lint checks on every build
-- Dependencies refreshed
+**Settings cleanup**
+- Removed the Auto Play switch in Settings. It never actually changed anything since Up Next always ran, so it was misleading. Up Next itself works exactly the same as before.
+
+**Smaller app**
+- Removed leftover code from this app's Plex origins that had been sitting unused since the fork. No visible change, just a smaller install. The Kodi/ZDMC integration is unaffected.
 
 ## Upgrade notes
 
-Install over your existing app: your settings are kept. If a previous install fails to update because of a signature mismatch, this only affects people who built the app from source themselves; uninstall the old app first, then install this one.
+Install over your existing 2026.09.1 install: your settings are kept.

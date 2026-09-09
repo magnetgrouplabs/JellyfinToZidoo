@@ -66,12 +66,6 @@
             android:dependency="useZidooPlayer" />
 
         <SwitchPreference
-            android:defaultValue="false"
-            android:key="auto_play"
-            android:title="@string/auto_play_title"
-            android:dependency="useZidooPlayer" />
-
-        <SwitchPreference
             android:defaultValue="true"
             android:key="skip_intros"
             android:title="@string/skip_intros_title"
@@ -84,26 +78,6 @@
             android:dependency="useZidooPlayer" />
 
     </PreferenceCategory>
-
-    <!-- PLEX_REMOVED_START - Plex library include/exclude preferences (Plex-specific library selection) -->
-    <!--
-    <PreferenceCategory app:title="@string/plex_settings">
-
-        <EditTextPreference
-            android:defaultValue="*"
-            android:key="libraries"
-            android:title="@string/libraries_title"
-            app:useSimpleSummaryProvider="true" />
-
-        <EditTextPreference
-            android:defaultValue=""
-            android:key="exclude_libraries"
-            android:title="@string/exclude_libraries_title"
-            app:useSimpleSummaryProvider="true" />
-
-    </PreferenceCategory>
-    -->
-    <!-- PLEX_REMOVED_END -->
 
     <PreferenceCategory app:title="@string/substitution_settings">
 

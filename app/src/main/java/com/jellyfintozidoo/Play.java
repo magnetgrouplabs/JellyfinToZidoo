@@ -10,34 +10,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-// PLEX_REMOVED_START - Plex XML parsing imports
-// import android.util.Xml;
-// PLEX_REMOVED_END
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-// PLEX_REMOVED_START - Plex API: Volley HTTP client imports for Plex server communication
-// import com.android.volley.Request;
-// import com.android.volley.RequestQueue;
-// import com.android.volley.toolbox.StringRequest;
-// import com.android.volley.toolbox.Volley;
-// PLEX_REMOVED_END
-
-// PLEX_REMOVED_START - Plex XML parsing imports
-// import org.xmlpull.v1.XmlPullParser;
-// PLEX_REMOVED_END
-
-// PLEX_REMOVED_START - Plex API: stream parsing imports
-// import java.io.ByteArrayInputStream;
-// import java.io.InputStream;
-// PLEX_REMOVED_END
 import java.io.File;
-// PLEX_REMOVED_START - Plex API: library list import
-// import java.util.List;
-// PLEX_REMOVED_END
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -115,22 +94,8 @@ public class Play extends AppCompatActivity
         }).start();
     }
 
-
-    // PLEX_REMOVED_START - Plex API: token and client identifier URL parameters
-    // static final String tokenParameter = "X-Plex-Token=";
-    // static final String clientParameter = "X-Plex-Client-Identifier=";
-    // PLEX_REMOVED_END
     private Intent originalIntent;
     private Intent newIntent;
-    // PLEX_REMOVED_START - Plex API: server address and library info
-    // private String address = "";
-    // private PlexLibraryInfo libraryInfo;
-    // private String ratingKey = "";
-    // private String partKey = "";
-    // private String partId = "";
-    // private String token = "";
-    // private int duration = 0;
-    // PLEX_REMOVED_END
     private int viewOffset = 0;
     private String directPath = "";
     private String videoTitle = "";
@@ -139,19 +104,11 @@ public class Play extends AppCompatActivity
     private boolean subtitleSelected = false;
     private int selectedSubtitleIndex = -1;
     private String password = "";
-    // PLEX_REMOVED_START - Plex API: video index and parent key for episode navigation
-    // private int videoIndex = 0;
-    // private String parentRatingKey = "";
-    // private String server = "";
-    // PLEX_REMOVED_END
     private String message = "";
     private boolean foundSubstitution = false;
     private String videoPath = "";
     private volatile String jellyfinItemId = "";
     private String jellyfinApiPath = "";
-    // PLEX_REMOVED_START - Plex API: remote stream and media index tracking
-    // private boolean remoteStream = false;
-    // PLEX_REMOVED_END
     private boolean zdmc = false;
     private String callerPackage = "";
     private String serverUrl = "";
@@ -168,9 +125,6 @@ public class Play extends AppCompatActivity
     private volatile boolean handlingPlaybackResult = false;
     private volatile boolean awaitingPlaybackResult = false;
     private volatile java.util.concurrent.ScheduledExecutorService progressPoller = null;
-    // PLEX_REMOVED_START - Plex API: media version index
-    // private int mediaIndex = -1;
-    // PLEX_REMOVED_END
 
     // Intro/credit skip state
     private volatile boolean introSkipArmed = true;
@@ -248,17 +202,6 @@ public class Play extends AppCompatActivity
         this.finishWithResult();
     }
 
-    // PLEX_REMOVED_START - Plex API: sanitizes Plex server addresses and tokens from debug strings
-    // private String getPrintableString(String inputString)
-    // {
-    //     String outputString = inputString;
-    //     outputString = outputString.replaceFirst("https://[^/ ]+", "https://<address>");
-    //     outputString = outputString.replaceFirst(tokenParameter + "[^& ]+", tokenParameter + "<token>");
-    //     outputString = outputString.replaceFirst(clientParameter + "[^& ]+", clientParameter + "<client>");
-    //     return outputString;
-    // }
-    // PLEX_REMOVED_END
-
     /** Matches the credential part of an smb URI so it can be hidden from logs and the debug page. */
     private static final Pattern SMB_CREDENTIALS_PATTERN = Pattern.compile("smb://([^:/@]+):[^@/]*@");
 
@@ -303,16 +246,6 @@ public class Play extends AppCompatActivity
         {
             pathToPrint = pathToPrint.replaceFirst(":" + Pattern.quote(password) + "@", ":********@");
         }
-
-        // PLEX_REMOVED_START - Plex API: library section and media type debug info
-        // String librarySection = "";
-        // String mediaType = "";
-        // if(libraryInfo != null)
-        // {
-        //     librarySection = libraryInfo.getKey();
-        //     mediaType = libraryInfo.getType().name;
-        // }
-        // PLEX_REMOVED_END
 
         if(!foundSubstitution && message.isEmpty())
         {
@@ -373,87 +306,6 @@ public class Play extends AppCompatActivity
             playButton.callOnClick();
         }
     }
-
-    // PLEX_REMOVED_START - Plex API: searches Plex server for next episode file to auto-play
-    // private void searchFiles()
-    // {
-    //     RequestQueue queue = Volley.newRequestQueue(this);
-    //     videoIndex++;
-    //     String url = address + "/library/sections/" + libraryInfo.getKey() + "/search?type=" + libraryInfo.getType().searchId + "&index=" + videoIndex + "&parent=" + parentRatingKey + "&" + tokenParameter + token;
-    //     StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-    //             response ->
-    //             {
-    //                 PlexLibraryXmlParser parser = new PlexLibraryXmlParser(null, -1);
-    //                 InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-    //                 try
-    //                 {
-    //                     String path = parser.parse(targetStream);
-    //                     if(!path.isEmpty())
-    //                     {
-    //                         String inputString = originalIntent.getDataString();
-    //                         inputString = inputString.replace(partKey, path);
-    //                         originalIntent.setData(Uri.parse(inputString));
-    //                         originalIntent.putExtra("viewOffset", 0);
-    //                         startActivity(originalIntent);
-    //                     }
-    //                 }
-    //                 catch (Exception e)
-    //                 {
-    //                     message = "ERROR 6: " + e;
-    //                     showDebugPageOrSendIntent();
-    //                     return;
-    //                 }
-    //             },
-    //             error ->
-    //             {
-    //                 message = "WARNING: Couldn't find next file - " + error.toString();
-    //                 showDebugPageOrSendIntent();
-    //             });
-    //     queue.add(stringRequest);
-    // }
-    // PLEX_REMOVED_END
-
-    // PLEX_REMOVED_START - Plex API: fetches metadata from Plex server for audio/subtitle stream selection
-    // private void searchMetadata()
-    // {
-    //     RequestQueue queue = Volley.newRequestQueue(this);
-    //     String url = address + "/library/metadata/" + ratingKey + "?" + tokenParameter + token;
-    //     StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-    //             response ->
-    //             {
-    //                 PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey, mediaIndex);
-    //                 InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-    //                 try
-    //                 {
-    //                     String path = parser.parse(targetStream);
-    //                     if(!path.isEmpty())
-    //                     {
-    //                         if(!audioSelected)
-    //                         {
-    //                             audioSelected = parser.isAudioSelected();
-    //                             if (audioSelected) { selectedAudioIndex = parser.getSelectedAudioIndex(); }
-    //                         }
-    //                         if(!subtitleSelected)
-    //                         {
-    //                             subtitleSelected = parser.isSubtitleSelected();
-    //                             if (subtitleSelected) { selectedSubtitleIndex = parser.getSelectedSubtitleIndex(); }
-    //                         }
-    //                     }
-    //                 }
-    //                 catch (Exception e)
-    //                 {
-    //                     message = "ERROR 5: " + e;
-    //                 }
-    //                 showDebugPageOrSendIntent();
-    //             },
-    //             error ->
-    //             {
-    //                 message = "ERROR: Couldn't find metadata - " + error.toString();
-    //                 showDebugPageOrSendIntent();
-    //             });
-    //     queue.add(stringRequest);
-    // }
-    // PLEX_REMOVED_END
 
     private void doSubstitution(String path)
     {
@@ -518,138 +370,6 @@ public class Play extends AppCompatActivity
             }
         }
     }
-
-    // PLEX_REMOVED_START - Plex API: searches Plex library sections for the video file path by partId
-    // private void searchPath(List<PlexLibraryInfo> infos, int index)
-    // {
-    //     PlexLibraryInfo info = infos.get(index);
-    //     libraryInfo = info;
-    //     RequestQueue queue = Volley.newRequestQueue(this);
-    //     String url = address + "/library/sections/" + info.getKey() + "/search?type=" + info.getType().searchId + "&part=" + partId + "&" + tokenParameter + token;
-    //     StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-    //             response ->
-    //             {
-    //                 PlexLibraryXmlParser parser = new PlexLibraryXmlParser(partKey, mediaIndex);
-    //                 InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-    //                 try
-    //                 {
-    //                     String path = parser.parse(targetStream);
-    //                     if(!path.isEmpty())
-    //                     {
-    //                         videoPath = path;
-    //                         ratingKey = parser.getRatingKey();
-    //                         videoTitle = parser.getVideoTitle();
-    //                         duration = parser.getDuration();
-    //                         videoIndex = parser.getVideoIndex();
-    //                         parentRatingKey = parser.getParentRatingKey();
-    //                         password = "";
-    //                         doSubstitution(path);
-    //                         if(!foundSubstitution && originalIntent.getDataString().contains("&location=wan&"))
-    //                         {
-    //                             remoteStream = true;
-    //                             message = "WARNING: Remote Stream - May Not Work";
-    //                         }
-    //                         searchMetadata();
-    //                     }
-    //                     else if(index + 1 < infos.size())
-    //                     {
-    //                         searchPath(infos, index + 1);
-    //                     }
-    //                     else
-    //                     {
-    //                         message = "ERROR: Video not found on Plex";
-    //                         showDebugPageOrSendIntent();
-    //                     }
-    //                 }
-    //                 catch (Exception e)
-    //                 {
-    //                     message = "ERROR 4: " + e;
-    //                     showDebugPageOrSendIntent();
-    //                     return;
-    //                 }
-    //             },
-    //             error ->
-    //             {
-    //                 if(index + 1 < infos.size())
-    //                 {
-    //                     searchPath(infos, index + 1);
-    //                 }
-    //                 else
-    //                 {
-    //                     message = "ERROR: Couldn't find path - " + error.toString();
-    //                     showDebugPageOrSendIntent();
-    //                 }
-    //             });
-    //     queue.add(stringRequest);
-    // }
-    // PLEX_REMOVED_END
-
-    // PLEX_REMOVED_START - Plex API: fetches library sections list from Plex server
-    // private void searchLibrary()
-    // {
-    //     RequestQueue queue = Volley.newRequestQueue(this);
-    //     String url = address + "/library/sections/?" + tokenParameter + token;
-    //     StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-    //             response ->
-    //             {
-    //                 String include_libraries = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("libraries", "").trim();
-    //                 String exclude_libraries = PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("exclude_libraries", "").trim();
-    //                 PlexXmlParser parser = new PlexXmlParser(include_libraries, exclude_libraries);
-    //                 InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-    //                 try
-    //                 {
-    //                     List<PlexLibraryInfo> libraries = parser.parse(targetStream);
-    //                     searchPath(libraries, 0);
-    //                     return;
-    //                 }
-    //                 catch (Exception e)
-    //                 {
-    //                     message = "ERROR 3: " + e;
-    //                     showDebugPageOrSendIntent();
-    //                     return;
-    //                 }
-    //             },
-    //             error ->
-    //             {
-    //                 message = "ERROR: Couldn't find library - " + error.toString();
-    //                 showDebugPageOrSendIntent();
-    //             });
-    //     queue.add(stringRequest);
-    // }
-    // PLEX_REMOVED_END
-
-    // PLEX_REMOVED_START - Plex API: queries Plex server identity to get machineIdentifier
-    // private void findServer()
-    // {
-    //     RequestQueue queue = Volley.newRequestQueue(this);
-    //     String url = address + "/identity?" + tokenParameter + token;
-    //     StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-    //             response ->
-    //             {
-    //                 InputStream targetStream = new ByteArrayInputStream(response.getBytes());
-    //                 try
-    //                 {
-    //                     XmlPullParser parser = Xml.newPullParser();
-    //                     parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-    //                     parser.setInput(targetStream, null);
-    //                     parser.nextTag();
-    //                     parser.require(XmlPullParser.START_TAG, null, "MediaContainer");
-    //                     server = parser.getAttributeValue(null, "machineIdentifier");
-    //                 }
-    //                 catch (Exception e)
-    //                 {
-    //                     message = "WARNING 2: " + e;
-    //                 }
-    //                 searchLibrary();
-    //             },
-    //             error ->
-    //             {
-    //                 message = "WARNING: Couldn't find server - " + error.toString();
-    //                 searchLibrary();
-    //             });
-    //     queue.add(stringRequest);
-    // }
-    // PLEX_REMOVED_END
 
     @Override
     protected void onStart()
@@ -720,6 +440,7 @@ public class Play extends AppCompatActivity
 
         try
         {
+            // The PlexToZidoo- parameter prefix is an external contract with the ZDMC/Kodi integration, so it must keep this name.
             Pattern p = Pattern.compile("[?&]PlexToZidoo-([^=]+)=([^&]+)");
             Matcher m = p.matcher(inputString);
             boolean pathMapped = false;
@@ -777,23 +498,6 @@ public class Play extends AppCompatActivity
                     return;
                 }
             }
-            // PLEX_REMOVED_START - Plex API: extract viewOffset and mediaIndex from Plex intent extras
-            // else
-            // {
-            //     try
-            //     {
-            //         viewOffset = originalIntent.getIntExtra("viewOffset", 0);
-            //     }
-            //     catch (Exception e)
-            //     {
-            //         // There is some strange error that is seen on newer levels of Plex such that if
-            //         // I just try again it will work.  I've only seen this on the first extra we try
-            //         // and read so we'll just ignore the first error and hope the second one succeeds
-            //         viewOffset = originalIntent.getIntExtra("viewOffset", 0);
-            //     }
-            //     mediaIndex = originalIntent.getIntExtra("mediaIndex", -1);
-            // }
-            // PLEX_REMOVED_END
         }
         catch (Exception e)
         {
@@ -801,80 +505,6 @@ public class Play extends AppCompatActivity
             showDebugPageOrSendIntent();
             return;
         }
-
-        // PLEX_REMOVED_START - Plex API: extract token and server address from Plex URL, then query Plex server
-        // try
-        // {
-        //     Pattern tokenPattern = Pattern.compile(tokenParameter + "([^&]+)");
-        //     Matcher tokenMatcher = tokenPattern.matcher(inputString);
-        //     if(tokenMatcher.find() && tokenMatcher.groupCount() >= 1)
-        //     {
-        //         token = tokenMatcher.group(1);
-        //     }
-        //
-        //     Pattern addressPattern = Pattern.compile("^https://[^/]+");
-        //     Matcher addressMatcher = addressPattern.matcher(inputString);
-        //     if(addressMatcher.find())
-        //     {
-        //         address = addressMatcher.group();
-        //
-        //         if(address.contains("provider.plex.tv"))
-        //         {
-        //             message = "WARNING: Plex Free Stream - May Not Work";
-        //             showDebugPageOrSendIntent();
-        //             return;
-        //         }
-        //     }
-        //     else
-        //     {
-        //         message = "ERROR: No address found";
-        //         showDebugPageOrSendIntent();
-        //         return;
-        //     }
-        // }
-        // catch (Exception e)
-        // {
-        //     message = "ERROR 1.1: " + e;
-        //     showDebugPageOrSendIntent();
-        //     return;
-        // }
-        //
-        // try
-        // {
-        //     Pattern partKeyPattern = Pattern.compile("/(library|services)/[^?]+");
-        //     Matcher partKeyMatcher = partKeyPattern.matcher(inputString);
-        //     if(partKeyMatcher.find())
-        //     {
-        //         partKey = partKeyMatcher.group();
-        //
-        //         if(partKey.contains("services"))
-        //         {
-        //             showDebugPageOrSendIntent();
-        //             return;
-        //         }
-        //
-        //         String[] partDirs = partKey.split("/");
-        //         if(partDirs.length > 3)
-        //         {
-        //             partId = partDirs[3];
-        //         }
-        //     }
-        //     else
-        //     {
-        //         message = "ERROR: No partKey found";
-        //         showDebugPageOrSendIntent();
-        //         return;
-        //     }
-        // }
-        // catch (Exception e)
-        // {
-        //     message = "ERROR 1.2: " + e;
-        //     showDebugPageOrSendIntent();
-        //     return;
-        // }
-        //
-        // findServer();
-        // PLEX_REMOVED_END
 
         // Jellyfin intent handling (replaces Plex server communication)
         if(!zdmc)
@@ -901,16 +531,26 @@ public class Play extends AppCompatActivity
                 jellyfinAudioStreamIndex = JellyfinApi.parseUrlParam(inputUrl, "AudioStreamIndex");
                 jellyfinSubtitleStreamIndex = JellyfinApi.parseUrlParam(inputUrl, "SubtitleStreamIndex");
 
-                // Check for position from intent extras (Jellyfin client sends ms)
+                // Check for position from intent extras (Jellyfin client sends ms). The client
+                // always sets this extra and sets it to 0 for "Play from beginning", so we have
+                // to know whether it was present, not just whether it was non zero.
+                boolean hasPosition = false;
                 int intentPosition = 0;
                 try
                 {
-                    intentPosition = originalIntent.getIntExtra("position", 0);
+                    hasPosition = originalIntent.hasExtra("position");
+                    if(hasPosition)
+                    {
+                        intentPosition = originalIntent.getIntExtra("position", 0);
+                    }
                 }
                 catch(Exception e)
                 {
                     // Ignore -- some intents may not have this extra
+                    hasPosition = false;
+                    intentPosition = 0;
                 }
+                final boolean hasIntentPos = hasPosition;
                 final int intentPos = intentPosition;
 
                 // Read server config and store in instance fields for playback reporting
@@ -989,15 +629,10 @@ public class Play extends AppCompatActivity
                             });
                         }
 
-                        // Use intent position if provided, otherwise convert API ticks to ms
-                        if(intentPos > 0)
-                        {
-                            viewOffset = intentPos;
-                        }
-                        else if(positionTicks > 0)
-                        {
-                            viewOffset = (int) JellyfinApi.ticksToMs(positionTicks);
-                        }
+                        // The client's position wins whenever it sent one, an explicit 0 from
+                        // "Play from beginning" included; the server's saved position is used
+                        // only when the extra is absent.
+                        viewOffset = resolveStartPositionMs(hasIntentPos, intentPos, positionTicks);
 
                         doSubstitution(serverPath);
                         showDebugPageOrSendIntent();
@@ -1070,6 +705,64 @@ public class Play extends AppCompatActivity
         newIntent.setDataAndTypeAndNormalize(Uri.parse(path != null ? path : ""), "video/*" );
     }
 
+    /**
+     * Decides where playback starts, in milliseconds.
+     *
+     * The Jellyfin Android client always puts a "position" extra on the external player intent
+     * and sets it to 0 when the user picks "Play from beginning", so a present extra always wins,
+     * 0 included. Only when the extra is absent does the item's saved server position apply.
+     *
+     * @param hasIntentPosition   true when the calling intent carried a "position" extra
+     * @param intentPositionMs    the value of that extra, in milliseconds
+     * @param serverPositionTicks the item's saved PlaybackPositionTicks from the server
+     * @return the start offset in milliseconds, never negative
+     */
+    static int resolveStartPositionMs(boolean hasIntentPosition, int intentPositionMs, long serverPositionTicks)
+    {
+        if(hasIntentPosition)
+        {
+            return Math.max(intentPositionMs, 0);
+        }
+        if(serverPositionTicks > 0)
+        {
+            return (int) JellyfinApi.ticksToMs(serverPositionTicks);
+        }
+        return 0;
+    }
+
+    /**
+     * True when consecutive polls report the same position, which means the Zidoo player is
+     * paused (or otherwise not advancing). A negative baseline means no previous poll, so the
+     * state is unknown and reported as not paused.
+     *
+     * @param lastPollPositionMs position reported by the previous poll, or -1 when there is none
+     * @param currentPositionMs  position reported by this poll
+     */
+    static boolean isPlayerPaused(long lastPollPositionMs, long currentPositionMs)
+    {
+        return lastPollPositionMs >= 0 && currentPositionMs == lastPollPositionMs;
+    }
+
+    /**
+     * True when the one-time audio and subtitle selection may be sent to the Zidoo player.
+     *
+     * A track switch sent to a paused Realtek player re-primes the pipeline and resumes
+     * playback, so the selection waits until two consecutive polls show the position moving
+     * forward, which confirms the player is actually playing. A single poll is not enough,
+     * because the first poll after a resume reports a position without proving it advances.
+     *
+     * @param tracksSet          true once the selection has already been applied for this episode
+     * @param lastPollPositionMs position reported by the previous poll, or -1 when there is none
+     * @param currentPositionMs  position reported by this poll
+     */
+    static boolean shouldApplyTrackSelection(boolean tracksSet, long lastPollPositionMs, long currentPositionMs)
+    {
+        return !tracksSet
+                && currentPositionMs > 0
+                && lastPollPositionMs >= 0
+                && currentPositionMs > lastPollPositionMs;
+    }
+
     protected void buildZidooIntent(String path, int viewOffset)
     {
         // see https://github.com/Andy2244/jellyfin-androidtv-zidoo/blob/Zidoo-Edition/app/src/main/java/org/jellyfin/androidtv/ui/playback/ExternalPlayerActivity.java
@@ -1136,7 +829,6 @@ public class Play extends AppCompatActivity
 
         newIntent.putExtra("return_result", true);
     }
-
 
     private void startProgressPoller() {
         if (progressPoller != null) return; // Already running
@@ -1306,9 +998,20 @@ public class Play extends AppCompatActivity
                                 long currentPositionMs = video.get("currentPosition").getAsLong();
                                 lastKnownPositionMs = currentPositionMs;
 
-                                // Set audio/subtitle tracks once after Zidoo player loads
-                                if (!tracksSet && currentPositionMs > 0) {
+                                // A track switch sent to a paused Realtek player re-primes the
+                                // pipeline and resumes playback on its own, so the one-time
+                                // audio/subtitle selection waits until the position is confirmed
+                                // to be advancing between polls.
+                                boolean playerPaused = isPlayerPaused(lastPollPositionMs, currentPositionMs);
+                                boolean applyTracks = shouldApplyTrackSelection(tracksSet, lastPollPositionMs, currentPositionMs);
+                                if (!tracksSet && !applyTracks) {
+                                    Log.d("Play", "Track selection deferred: player not advancing (pos=" + currentPositionMs
+                                            + " lastPos=" + lastPollPositionMs + " paused=" + playerPaused + ")");
+                                }
+                                if (applyTracks) {
                                     tracksSet = true;
+                                    Log.d("Play", "Track selection applied at pos=" + currentPositionMs
+                                            + " (advanced from " + lastPollPositionMs + ")");
                                     new Thread(() -> {
                                         try { Thread.sleep(500); } catch (InterruptedException e) { return; }
                                         if (jellyfinAudioStreamIndex >= 0 && mediaStreams != null) {
@@ -1326,7 +1029,7 @@ public class Play extends AppCompatActivity
                                 // Report progress to Jellyfin
                                 if (!jellyfinItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
                                     JellyfinApi.reportPlaybackProgress(serverUrl, accessToken,
-                                            jellyfinItemId, playSessionId, positionTicks, false,
+                                            jellyfinItemId, playSessionId, positionTicks, playerPaused,
                                             new JellyfinApi.SimpleCallback() {
                                                 @Override public void onSuccess(String msg) { }
                                                 @Override public void onError(String error) {
@@ -1397,23 +1100,11 @@ public class Play extends AppCompatActivity
 
                                 lastPollPositionMs = currentPositionMs;
 
-                                // Stop player before end to prevent Zidoo auto-advancing.
-                                // Only if credit skip hasn't already handled it.
-                                if (!upNextTriggered && !seriesId.isEmpty()
-                                        && !(creditSkipArmed && creditStartMs >= 0)  // Skip generic stop if credit skip is active
-                                        && lastKnownDurationMs > 60000 && currentPositionMs > 0
-                                        && (remainingMs <= 30000 || remainingMs <= 15000 || remainingMs <= 5000)) {
-                                    upNextTriggered = true;
-                                    Log.d("Play", "Near end of episode (" + remainingMs + "ms remaining), stopping player for Up Next");
-                                    runOnUiThread(() -> {
-                                        try {
-                                            finishActivity(98);
-                                            Log.d("Play", "finishActivity(98) sent");
-                                        } catch (Exception e) {
-                                            Log.w("Play", "finishActivity failed: " + e.getMessage());
-                                        }
-                                    });
-                                }
+                                // There is deliberately no unconditional stop near the end of an episode.
+                                // The player is only stopped early when Intro Skipper gave us a credits
+                                // segment and playback reached it (the credit skip check above). Without a
+                                // credits segment the episode plays to its natural end and the Zidoo end of
+                                // playback result drives the Up Next flow in onActivityResult.
 
                             }
                         }
@@ -1766,13 +1457,20 @@ public class Play extends AppCompatActivity
 
         final long finalPositionTicks = JellyfinApi.msToTicks(finalPositionMs);
 
+        // Duration used for the watched threshold on a natural end of playback. Jellyfin is the
+        // first choice; when the item lookup gave us nothing, fall back to the duration the Zidoo
+        // player reported while polling, so an episode that runs to its end still crosses the
+        // threshold and still opens Up Next.
+        final long effectiveDurationTicks = durationTicks > 0 ? durationTicks
+                : (lastKnownDurationMs > 0 ? JellyfinApi.msToTicks(lastKnownDurationMs) : 0);
+
         // Report playback stopped to Jellyfin
         JellyfinApi.reportPlaybackStopped(serverUrl, accessToken, jellyfinItemId,
                 playSessionId, finalPositionTicks, new JellyfinApi.SimpleCallback() {
             @Override
             public void onSuccess(String msg) {
                 // Check 90% watched threshold
-                if (JellyfinApi.isWatched(finalPositionTicks, durationTicks)) {
+                if (JellyfinApi.isWatched(finalPositionTicks, effectiveDurationTicks)) {
                     JellyfinApi.markAsWatched(serverUrl, accessToken, userId,
                             jellyfinItemId, new JellyfinApi.SimpleCallback() {
                         @Override
