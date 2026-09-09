@@ -33,7 +33,7 @@
     <!-- <string name="exclude_libraries_title">Plex library name(s) to exclude (multiple libraries must be separated by a ",")</string> -->
     <!-- PLEX_REMOVED_END -->
     <!-- Substitution Preferences -->
-    <string name="substitution_description">Multiple substitution strings must be separated by a \",\"\nThe username and password fields do not allow multiple entries, use the additional substitutions screen if you need a different username/password per substitution"</string>
+    <string name="substitution_description">Multiple substitution strings must be separated by a \",\"\nThe part of the path to replace is matched at the start of the path, so enter it as a prefix\nThe username and password fields do not allow multiple entries, use the additional substitutions screen if you need a different username/password per substitution"</string>
     <string name="path_to_replace">Part of the path to replace</string>
     <string name="replaced_with">Replaced with</string>
     <string name="smbUsername_title">Smb username (if needed)</string>
@@ -42,7 +42,9 @@
     <string name="substitution_rule_2_title">Path Substitution Rule 2 (optional)</string>
     <string name="substitution_link_more">More Substitution Rules (3-10)...</string>
     <!-- Import/Export -->
-    <string name="import_export_description">Settings are imported/exported using the file JellyfinToZidooSettings.txt in the Download directory\nNOTE: These will not import/export your password</string>
+    <string name="import_export_description">Settings are imported/exported using the file JellyfinToZidooSettings.txt in the Download directory\nNOTE: Passwords and login tokens are left out of the export unless you turn on \"Include passwords in export\"</string>
+    <string name="export_include_passwords_title">Include passwords in export</string>
+    <string name="export_include_passwords_summary">Writes the Jellyfin and SMB passwords into the export file in plain text. The file is not encrypted and any app with storage access can read it.</string>
     <string name="import_button_title">Import</string>
     <string name="export_button_title">Export</string>
 

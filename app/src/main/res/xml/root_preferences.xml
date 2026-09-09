@@ -19,9 +19,12 @@
             app:useSimpleSummaryProvider="true"
             android:singleLine="true" />
 
+        <!-- Not persistent: the value is written to encrypted storage, never to the
+             default preferences file -->
         <EditTextPreference
             android:defaultValue=""
             android:key="jellyfin_password"
+            android:persistent="false"
             android:title="@string/jellyfin_password_title"
             app:useSimpleSummaryProvider="false"
             android:singleLine="true"
@@ -185,6 +188,12 @@
             android:persistent="false"
             android:title="@string/import_export_description"
             android:selectable="false" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="export_include_passwords"
+            android:title="@string/export_include_passwords_title"
+            android:summary="@string/export_include_passwords_summary" />
 
         <Preference
             android:key="import_export"

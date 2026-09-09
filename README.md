@@ -17,6 +17,8 @@
   <img src="https://img.shields.io/badge/Android-28%2B-34A853?style=flat-square&logo=android&logoColor=white" alt="Android 28+">
 </p>
 
+> **Jellyfin 12.0 required as of version 2026.09.1.** Intro skip and credit skip now read Jellyfin's native media segments (populated by Intro Skipper 12 or any plugin that writes media segments), replacing the old Intro Skipper endpoint that Jellyfin 12 removed. Do not upgrade to 2026.09.1 unless your server is on Jellyfin 12 or later. If your server is on Jellyfin 10.11 or older, stay on release [2026.03.1](https://github.com/magnetgrouplabs/JellyfinToZidoo/releases).
+
 ---
 
 Play media from any Jellyfin client and the Zidoo handles playback with full hardware decoding (Dolby Vision, DTS, TrueHD, and more). Watch state syncs seamlessly back to Jellyfin so your progress is always up to date.
@@ -47,7 +49,7 @@ Play media from any Jellyfin client and the Zidoo handles playback with full har
 | **Audio/subtitle passthrough** | Track selections from the Jellyfin client carry through to the Zidoo player |
 | **Disarm-on-seek** | Manual seeking disables auto-skip so your intent is respected |
 | **Path substitution** | Up to 10 configurable rules to map Jellyfin server paths to SMB URIs |
-| **Settings import/export** | Back up and restore configuration (tokens excluded for security) |
+| **Settings import/export** | Back up and restore configuration (login tokens always excluded; passwords excluded by default, with an "Include passwords in export" switch to opt in) |
 
 ## Requirements
 
@@ -57,7 +59,7 @@ Play media from any Jellyfin client and the Zidoo handles playback with full har
 - Zidoo must have the Play mode set to "Single file" or watched status and resume points may not update properly
   - Quick Settings > Playback > Play mode, then select "Single file"
 - A Jellyfin server with username/password authentication enabled
-- Optional: [Intro Skipper](https://github.com/intro-skipper/intro-skipper) plugin on the Jellyfin server for intro/credit skip
+- Optional: [Intro Skipper](https://github.com/intro-skipper/intro-skipper) on the Jellyfin server for intro/credit skip. It must be a Jellyfin 12 build (or another plugin that writes Jellyfin's native media segments); the old 10.11 build's endpoint no longer works
 
 ## Installation
 
