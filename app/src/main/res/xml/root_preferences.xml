@@ -19,9 +19,12 @@
             app:useSimpleSummaryProvider="true"
             android:singleLine="true" />
 
+        <!-- Not persistent: the value is written to encrypted storage, never to the
+             default preferences file -->
         <EditTextPreference
             android:defaultValue=""
             android:key="jellyfin_password"
+            android:persistent="false"
             android:title="@string/jellyfin_password_title"
             app:useSimpleSummaryProvider="false"
             android:singleLine="true"
@@ -63,9 +66,15 @@
             android:dependency="useZidooPlayer" />
 
         <SwitchPreference
-            android:defaultValue="false"
-            android:key="auto_play"
-            android:title="@string/auto_play_title"
+            android:defaultValue="true"
+            android:key="skip_intros"
+            android:title="@string/skip_intros_title"
+            android:dependency="useZidooPlayer" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_credits"
+            android:title="@string/skip_credits_title"
             android:dependency="useZidooPlayer" />
 
         <SwitchPreference
@@ -81,26 +90,6 @@
             android:dependency="useZidooPlayer" />
 
     </PreferenceCategory>
-
-    <!-- PLEX_REMOVED_START - Plex library include/exclude preferences (Plex-specific library selection) -->
-    <!--
-    <PreferenceCategory app:title="@string/plex_settings">
-
-        <EditTextPreference
-            android:defaultValue="*"
-            android:key="libraries"
-            android:title="@string/libraries_title"
-            app:useSimpleSummaryProvider="true" />
-
-        <EditTextPreference
-            android:defaultValue=""
-            android:key="exclude_libraries"
-            android:title="@string/exclude_libraries_title"
-            app:useSimpleSummaryProvider="true" />
-
-    </PreferenceCategory>
-    -->
-    <!-- PLEX_REMOVED_END -->
 
     <PreferenceCategory app:title="@string/substitution_settings">
 
@@ -185,6 +174,12 @@
             android:persistent="false"
             android:title="@string/import_export_description"
             android:selectable="false" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="export_include_passwords"
+            android:title="@string/export_include_passwords_title"
+            android:summary="@string/export_include_passwords_summary" />
 
         <Preference
             android:key="import_export"

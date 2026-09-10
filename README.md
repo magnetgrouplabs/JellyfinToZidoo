@@ -17,6 +17,8 @@
   <img src="https://img.shields.io/badge/Android-28%2B-34A853?style=flat-square&logo=android&logoColor=white" alt="Android 28+">
 </p>
 
+> **Jellyfin 12.0 required as of version 2026.09.1.** Intro skip and credit skip now read Jellyfin's native media segments (populated by Intro Skipper 12 or any plugin that writes media segments), replacing the old Intro Skipper endpoint that Jellyfin 12 removed. Do not upgrade to 2026.09.1 unless your server is on Jellyfin 12 or later. If your server is on Jellyfin 10.11 or older, stay on release [2026.03.1](https://github.com/magnetgrouplabs/JellyfinToZidoo/releases).
+
 ---
 
 Play media from any Jellyfin client and the Zidoo handles playback with full hardware decoding (Dolby Vision, DTS, TrueHD, and more). Watch state syncs seamlessly back to Jellyfin so your progress is always up to date.
@@ -43,11 +45,11 @@ Play media from any Jellyfin client and the Zidoo handles playback with full har
 | **Up Next** | Countdown screen between episodes with Play Now / Cancel, just like streaming apps |
 | **Binge watching** | When Zidoo auto-advances to the next file, each episode is tracked individually in Jellyfin |
 | **Intro skip** | Automatically skips intros using data from Jellyfin's [Intro Skipper](https://github.com/intro-skipper/intro-skipper) plugin |
-| **Credit skip** | Stops playback at credits and triggers Up Next early |
+| **Credit skip** | When Intro Skipper has marked a credits segment, stops playback early and triggers Up Next; otherwise the episode plays to the end and Up Next follows as usual |
 | **Audio/subtitle passthrough** | Track selections from the Jellyfin client carry through to the Zidoo player |
 | **Disarm-on-seek** | Manual seeking disables auto-skip so your intent is respected |
 | **Path substitution** | Up to 10 configurable rules to map Jellyfin server paths to SMB URIs |
-| **Settings import/export** | Back up and restore configuration (tokens excluded for security) |
+| **Settings import/export** | Back up and restore configuration (login tokens always excluded; passwords excluded by default, with an "Include passwords in export" switch to opt in) |
 
 ## Requirements
 
@@ -57,7 +59,7 @@ Play media from any Jellyfin client and the Zidoo handles playback with full har
 - Zidoo must have the Play mode set to "Single file" or watched status and resume points may not update properly
   - Quick Settings > Playback > Play mode, then select "Single file"
 - A Jellyfin server with username/password authentication enabled
-- Optional: [Intro Skipper](https://github.com/intro-skipper/intro-skipper) plugin on the Jellyfin server for intro/credit skip
+- Optional: [Intro Skipper](https://github.com/intro-skipper/intro-skipper) on the Jellyfin server for intro/credit skip. It must be a Jellyfin 12 build (or another plugin that writes Jellyfin's native media segments); the old 10.11 build's endpoint no longer works
 
 ## Installation
 
@@ -128,7 +130,7 @@ JellyfinToZidoo should work with **any Jellyfin client** that supports sending e
 3. Path substitution converts the server path to an SMB URI
 4. The native Zidoo player launches with the SMB path, resume position, and audio/subtitle track selections
 5. A background poller monitors playback and reports progress back to Jellyfin
-6. When an episode ends, the **Up Next** screen appears with a countdown to the next episode
+6. If Intro Skipper has marked a credits segment for the episode, playback stops early there and the **Up Next** screen appears with a countdown to the next episode; otherwise the episode plays through to the end and **Up Next** appears right after
 
 ## Building from Source
 
@@ -165,7 +167,7 @@ MIT. See [LICENSE](LICENSE) for details.
 </p>
 
 <p align="center">
-  <a href="https://buymeacoffee.com/example-user">
-    <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=example-user&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me A Coffee"/>
+  <a href="https://buymeacoffee.com/anthonymkz">
+    <img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&emoji=☕&slug=anthonymkz&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me A Coffee"/>
   </a>
 </p>
