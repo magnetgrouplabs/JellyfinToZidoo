@@ -65,6 +65,24 @@
             android:title="@string/showTitle_title"
             android:dependency="useZidooPlayer" />
 
+        <!-- CONFLICT: Z13 2026-09-09 22:28 listed skip_intros and skip_credits a second
+             time in this category. Two preferences with the same android:key in one
+             screen would render duplicate rows bound to the same setting, so the single
+             pair below is kept. Losing lines, verbatim:
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_intros"
+            android:title="@string/skip_intros_title"
+            android:dependency="useZidooPlayer" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_credits"
+            android:title="@string/skip_credits_title"
+            android:dependency="useZidooPlayer" />
+        -->
+
         <SwitchPreference
             android:defaultValue="true"
             android:key="skip_intros"
