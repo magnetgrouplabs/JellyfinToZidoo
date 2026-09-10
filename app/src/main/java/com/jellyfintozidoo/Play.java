@@ -125,23 +125,6 @@ public class Play extends AppCompatActivity
     private volatile boolean handlingPlaybackResult = false;
     private volatile boolean awaitingPlaybackResult = false;
     private volatile java.util.concurrent.ScheduledExecutorService progressPoller = null;
-<<<<<<< MAINPC 2026-09-09 23:01
-=======
-
-    // Intro/credit skip state
-    private volatile boolean introSkipArmed = true;
-    private volatile boolean creditSkipArmed = true;
-    private volatile long introStartMs = -1, introEndMs = -1;
-    private volatile long creditStartMs = -1, creditEndMs = -1;
-    private volatile long lastPollPositionMs = -1;
-    private volatile boolean tracksSet = false;  // Set audio/subtitle only once per episode
-    private volatile boolean introSegmentsFetched = false;
-
-    // Audio/subtitle from intent URL
-    private volatile int jellyfinAudioStreamIndex = -1;
-    private int jellyfinSubtitleStreamIndex = -1;
-    private volatile com.google.gson.JsonArray mediaStreams = null;  // Parsed from getItem response
->>>>>>> Z13 2026-09-09 22:28
 
     // Intro/credit skip state
     private volatile boolean introSkipArmed = true;
