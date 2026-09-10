@@ -3,7 +3,11 @@ name: Release APK
 on:
   push:
     tags:
+<<<<<<< MAINPC 2026-09-09 21:28
       - 'v20*'
+=======
+      - 'v*'
+>>>>>>> Z13 2026-08-30 16:27
 
 permissions:
   contents: write
@@ -34,6 +38,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
 
+<<<<<<< MAINPC 2026-09-09 21:28
     - name: Run Unit Tests
       run: ./gradlew test
 
@@ -84,6 +89,15 @@ jobs:
 
     - name: Create GitHub Release (auto notes only)
       if: steps.notes.outputs.exists == 'false'
+=======
+    - name: Build Release APK
+      run: ./gradlew assembleRelease
+
+    - name: Rename APK
+      run: mv app/build/outputs/apk/release/app-release-unsigned.apk JellyfinToZidoo.apk
+
+    - name: Create GitHub Release
+>>>>>>> Z13 2026-08-30 16:27
       uses: softprops/action-gh-release@v2
       with:
         files: JellyfinToZidoo.apk

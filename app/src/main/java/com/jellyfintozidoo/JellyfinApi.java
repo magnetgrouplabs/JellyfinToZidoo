@@ -134,6 +134,7 @@ public class JellyfinApi {
     }
 
     /**
+<<<<<<< MAINPC 2026-09-09 21:28
      * Result object for parsed media segment responses. Package-private for testability.
      * Fields store timestamps in milliseconds. A value of -1 means the segment is not
      * present or not valid. The accessor names are part of the app's internal contract
@@ -281,6 +282,64 @@ public class JellyfinApi {
         } catch (Exception e) {
             return fallback;
         }
+=======
+     * Result object for parsed IntroSkipper segment responses. Package-private for testability.
+     * Fields store timestamps in seconds; use convenience methods for milliseconds.
+     * A value of -1 means the segment is not present or not valid.
+     */
+    static class IntroSkipperResult {
+        final double introStartSec;
+        final double introEndSec;
+        final double creditStartSec;
+        final double creditEndSec;
+
+        IntroSkipperResult(double introStartSec, double introEndSec,
+                           double creditStartSec, double creditEndSec) {
+            this.introStartSec = introStartSec;
+            this.introEndSec = introEndSec;
+            this.creditStartSec = creditStartSec;
+            this.creditEndSec = creditEndSec;
+        }
+
+        long introStartMs() { return introStartSec < 0 ? -1 : (long) (introStartSec * 1000); }
+        long introEndMs() { return introEndSec < 0 ? -1 : (long) (introEndSec * 1000); }
+        long creditStartMs() { return creditStartSec < 0 ? -1 : (long) (creditStartSec * 1000); }
+        long creditEndMs() { return creditEndSec < 0 ? -1 : (long) (creditEndSec * 1000); }
+    }
+
+    /**
+     * Parses an IntroSkipper /Episode/{id}/IntroSkipperSegments JSON response.
+     * Returns an IntroSkipperResult with timestamps in seconds (-1 if not present/valid).
+     * Package-private for testability.
+     *
+     * @param jsonBody The raw JSON response body
+     * @return Parsed IntroSkipperResult
+     */
+    static IntroSkipperResult parseIntroSkipperResponse(String jsonBody) {
+        JsonObject root = JsonParser.parseString(jsonBody).getAsJsonObject();
+
+        double introStart = -1, introEnd = -1, creditStart = -1, creditEnd = -1;
+
+        if (root.has("Introduction")) {
+            JsonObject intro = root.getAsJsonObject("Introduction");
+            if (intro.has("Start") && intro.has("End")
+                    && intro.get("End").getAsDouble() > 0.0) {
+                introStart = intro.get("Start").getAsDouble();
+                introEnd = intro.get("End").getAsDouble();
+            }
+        }
+
+        if (root.has("Credits")) {
+            JsonObject credits = root.getAsJsonObject("Credits");
+            if (credits.has("Start") && credits.has("End")
+                    && credits.get("End").getAsDouble() > 0.0) {
+                creditStart = credits.get("Start").getAsDouble();
+                creditEnd = credits.get("End").getAsDouble();
+            }
+        }
+
+        return new IntroSkipperResult(introStart, introEnd, creditStart, creditEnd);
+>>>>>>> Z13 2026-08-30 16:27
     }
 
     /**
@@ -293,6 +352,7 @@ public class JellyfinApi {
      * @return 0-based audio index for Zidoo, or -1 if not found or not an audio stream
      */
     static int jellyfinToZidooAudioIndex(JsonArray mediaStreams, int jellyfinIndex) {
+<<<<<<< MAINPC 2026-09-09 21:28
         if (mediaStreams == null) return -1;
         int audioCount = 0;
         for (int i = 0; i < mediaStreams.size(); i++) {
@@ -302,6 +362,14 @@ public class JellyfinApi {
             String type = optString(stream, "Type");
             if ("Audio".equals(type)) {
                 if (optLong(stream, "Index", Long.MIN_VALUE) == jellyfinIndex) {
+=======
+        int audioCount = 0;
+        for (int i = 0; i < mediaStreams.size(); i++) {
+            JsonObject stream = mediaStreams.get(i).getAsJsonObject();
+            String type = stream.get("Type").getAsString();
+            if ("Audio".equals(type)) {
+                if (stream.get("Index").getAsInt() == jellyfinIndex) {
+>>>>>>> Z13 2026-08-30 16:27
                     return audioCount;
                 }
                 audioCount++;
@@ -320,6 +388,7 @@ public class JellyfinApi {
      * @return 1-based subtitle index for Zidoo, or -1 if not found or not a subtitle stream
      */
     static int jellyfinToZidooSubtitleIndex(JsonArray mediaStreams, int jellyfinIndex) {
+<<<<<<< MAINPC 2026-09-09 21:28
         if (mediaStreams == null) return -1;
         int subtitleCount = 0;
         for (int i = 0; i < mediaStreams.size(); i++) {
@@ -329,6 +398,14 @@ public class JellyfinApi {
             String type = optString(stream, "Type");
             if ("Subtitle".equals(type)) {
                 if (optLong(stream, "Index", Long.MIN_VALUE) == jellyfinIndex) {
+=======
+        int subtitleCount = 0;
+        for (int i = 0; i < mediaStreams.size(); i++) {
+            JsonObject stream = mediaStreams.get(i).getAsJsonObject();
+            String type = stream.get("Type").getAsString();
+            if ("Subtitle".equals(type)) {
+                if (stream.get("Index").getAsInt() == jellyfinIndex) {
+>>>>>>> Z13 2026-08-30 16:27
                     return subtitleCount + 1;
                 }
                 subtitleCount++;
@@ -377,6 +454,7 @@ public class JellyfinApi {
      * @return The Jellyfin Index of the default/forced stream, or -1 if not found
      */
     static int findDefaultStreamIndex(JsonArray mediaStreams, String type) {
+<<<<<<< MAINPC 2026-09-09 21:28
         if (mediaStreams == null) return -1;
         for (int i = 0; i < mediaStreams.size(); i++) {
             JsonElement element = mediaStreams.get(i);
@@ -392,6 +470,18 @@ public class JellyfinApi {
 
             if (isDefault || isForced) {
                 return (int) optLong(stream, "Index", -1);
+=======
+        for (int i = 0; i < mediaStreams.size(); i++) {
+            JsonObject stream = mediaStreams.get(i).getAsJsonObject();
+            String streamType = stream.has("Type") ? stream.get("Type").getAsString() : "";
+            if (!type.equals(streamType)) continue;
+
+            boolean isDefault = stream.has("IsDefault") && stream.get("IsDefault").getAsBoolean();
+            boolean isForced = stream.has("IsForced") && stream.get("IsForced").getAsBoolean();
+
+            if (isDefault || isForced) {
+                return stream.get("Index").getAsInt();
+>>>>>>> Z13 2026-08-30 16:27
             }
         }
         return -1;
@@ -492,6 +582,7 @@ public class JellyfinApi {
     }
 
     /**
+<<<<<<< MAINPC 2026-09-09 21:28
      * Normalizes a configured server URL into a base for path concatenation:
      * strips one trailing slash and surrounding whitespace, and turns null into "".
      * The single place this class handles the trailing slash.
@@ -570,12 +661,21 @@ public class JellyfinApi {
      * Since Jellyfin 12.0 every call sends the full MediaBrowser header with client identity,
      * rather than relying on the server backfilling the missing fields from the device row.
      * Kept as a separate name because callers and tests already use it.
+=======
+     * Builds the Jellyfin authorization header value.
+     * Package-private for testability.
+>>>>>>> Z13 2026-08-30 16:27
      *
      * @param apiKey The API key or access token
      * @return The formatted authorization header value
      */
+<<<<<<< MAINPC 2026-09-09 21:28
     public static String buildAuthHeader(String apiKey) {
         return buildFullAuthHeader(apiKey);
+=======
+    static String buildAuthHeader(String apiKey) {
+        return "MediaBrowser Token=\"" + apiKey + "\"";
+>>>>>>> Z13 2026-08-30 16:27
     }
 
     /**
@@ -830,7 +930,11 @@ public class JellyfinApi {
      */
     public static void getItem(String serverUrl, String apiKey, String itemId, Callback callback) {
         // Strip trailing slash
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Items/" + itemId + "?Fields=Path,MediaSources";
 
         Request request = new Request.Builder()
@@ -874,7 +978,11 @@ public class JellyfinApi {
      * Callback runs on the main (UI) thread.
      */
     public static void getItemDetailed(String serverUrl, String apiKey, String itemId, DetailedCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Items/" + itemId + "?Fields=Path,MediaSources";
 
         Request request = new Request.Builder()
@@ -931,7 +1039,11 @@ public class JellyfinApi {
      * @param callback  Callback for success/error
      */
     public static void authenticate(String serverUrl, String username, String password, AuthCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Users/AuthenticateByName";
 
         JsonObject body = new JsonObject();
@@ -940,7 +1052,11 @@ public class JellyfinApi {
 
         Request request = new Request.Builder()
                 .url(url)
+<<<<<<< MAINPC 2026-09-09 21:28
                 .addHeader("Authorization", buildClientIdentityHeader())
+=======
+                .addHeader("Authorization", "MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\"")
+>>>>>>> Z13 2026-08-30 16:27
                 .addHeader("Content-Type", "application/json")
                 .post(RequestBody.create(body.toString(), MediaType.get("application/json")))
                 .build();
@@ -985,13 +1101,22 @@ public class JellyfinApi {
 
     /**
      * Builds the full MediaBrowser authorization header with client info and token.
+<<<<<<< MAINPC 2026-09-09 21:28
      * The single builder behind every authenticated request in this class.
+=======
+     * Used for POST requests that require full client identification.
+>>>>>>> Z13 2026-08-30 16:27
      *
      * @param apiKey The access token
      * @return The formatted full authorization header value
      */
     static String buildFullAuthHeader(String apiKey) {
+<<<<<<< MAINPC 2026-09-09 21:28
         return buildClientIdentityHeader() + ", Token=\"" + apiKey + "\"";
+=======
+        return "MediaBrowser Client=\"JellyfinToZidoo\", Device=\"Zidoo\", "
+                + "DeviceId=\"jellyfintozidoo\", Version=\"1.0.0\", Token=\"" + apiKey + "\"";
+>>>>>>> Z13 2026-08-30 16:27
     }
 
     private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json");
@@ -1002,7 +1127,11 @@ public class JellyfinApi {
      */
     public static void reportPlaybackStart(String serverUrl, String apiKey, String itemId,
                                             String playSessionId, SimpleCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Sessions/Playing";
 
         JsonObject body = buildPlaybackStartBody(itemId, playSessionId);
@@ -1024,7 +1153,11 @@ public class JellyfinApi {
     public static void reportPlaybackProgress(String serverUrl, String apiKey, String itemId,
                                                String playSessionId, long positionTicks,
                                                boolean isPaused, SimpleCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Sessions/Playing/Progress";
 
         JsonObject body = buildPlaybackProgressBody(itemId, playSessionId, positionTicks, isPaused);
@@ -1046,7 +1179,11 @@ public class JellyfinApi {
     public static void reportPlaybackStopped(String serverUrl, String apiKey, String itemId,
                                               String playSessionId, long positionTicks,
                                               SimpleCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Sessions/Playing/Stopped";
 
         JsonObject body = buildPlaybackStoppedBody(itemId, playSessionId, positionTicks);
@@ -1062,6 +1199,7 @@ public class JellyfinApi {
     }
 
     /**
+<<<<<<< MAINPC 2026-09-09 21:28
      * Builds the mark as watched URL for Jellyfin 12.0.
      * Package-private so the URL shape is unit testable without a network call.
      *
@@ -1084,6 +1222,15 @@ public class JellyfinApi {
     public static void markAsWatched(String serverUrl, String apiKey, String userId,
                                       String itemId, SimpleCallback callback) {
         String url = buildMarkAsWatchedUrl(serverUrl, itemId);
+=======
+     * Marks an item as watched (played) on the Jellyfin server.
+     * POST /Users/{userId}/PlayedItems/{itemId}
+     */
+    public static void markAsWatched(String serverUrl, String apiKey, String userId,
+                                      String itemId, SimpleCallback callback) {
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Users/" + userId + "/PlayedItems/" + itemId;
+>>>>>>> Z13 2026-08-30 16:27
 
         Request request = new Request.Builder()
                 .url(url)
@@ -1107,7 +1254,11 @@ public class JellyfinApi {
      */
     public static void getNextUp(String serverUrl, String apiKey, String seriesId,
                                   NextUpCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Shows/NextUp?seriesId=" + seriesId + "&limit=1";
 
         Request request = new Request.Builder()
@@ -1151,6 +1302,7 @@ public class JellyfinApi {
         });
     }
 
+<<<<<<< MAINPC 2026-09-09 21:28
     /** How much of an error body reaches the log. Request headers are never logged. */
     static final int ERROR_BODY_LOG_LIMIT = 200;
 
@@ -1186,12 +1338,15 @@ public class JellyfinApi {
                 : single.substring(0, ERROR_BODY_LOG_LIMIT);
     }
 
+=======
+>>>>>>> Z13 2026-08-30 16:27
     /**
      * Enqueues an OkHttp request with simple success/error callback on the main thread.
      * Shared by all reporting methods.
      */
     private static void enqueueSimpleRequest(Request request, String operationName,
                                               SimpleCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         enqueueSimpleRequest(request, operationName, callback,
                 shouldRetryOnNetworkFailure(operationName) ? 1 : 0);
     }
@@ -1214,6 +1369,11 @@ public class JellyfinApi {
                             RETRY_DELAY_MS);
                     return;
                 }
+=======
+        getClient().newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+>>>>>>> Z13 2026-08-30 16:27
                 Log.e(TAG, operationName + " failed", e);
                 getMainHandler().post(() -> callback.onError("Network error: " + e.getMessage()));
             }
@@ -1222,6 +1382,7 @@ public class JellyfinApi {
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     if (!response.isSuccessful()) {
+<<<<<<< MAINPC 2026-09-09 21:28
                         String errorBody = "";
                         try {
                             if (response.body() != null) {
@@ -1232,6 +1393,8 @@ public class JellyfinApi {
                         }
                         Log.w(TAG, operationName + " HTTP " + response.code()
                                 + " body: " + truncateForLog(errorBody));
+=======
+>>>>>>> Z13 2026-08-30 16:27
                         final String msg = "HTTP error " + response.code();
                         getMainHandler().post(() -> callback.onError(msg));
                         return;
@@ -1253,7 +1416,11 @@ public class JellyfinApi {
      * @param callback  Callback for success/error
      */
     public static void testConnection(String serverUrl, String apiKey, SimpleCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/System/Info";
 
         Request request = new Request.Builder()
@@ -1317,7 +1484,11 @@ public class JellyfinApi {
      */
     public static void getNextUpWithDetails(String serverUrl, String apiKey, String userId,
                                              String seriesId, NextUpDetailCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String url = baseUrl + "/Shows/NextUp?seriesId=" + seriesId + "&userId=" + userId + "&limit=1&Fields=Path,MediaSources";
 
         Request request = new Request.Builder()
@@ -1370,6 +1541,7 @@ public class JellyfinApi {
     }
 
     /**
+<<<<<<< MAINPC 2026-09-09 21:28
      * How many search hits to pull before matching on the exact path.
      * Jellyfin 12.0 routes any searchTerm query through the new search providers, which ask
      * for more candidates than the limit and then rescore them, so a common episode title can
@@ -1379,6 +1551,8 @@ public class JellyfinApi {
     static final int SEARCH_BY_PATH_LIMIT = 50;
 
     /**
+=======
+>>>>>>> Z13 2026-08-30 16:27
      * Searches Jellyfin for an episode by its server-side file path.
      * Extracts filename as search term, queries /Items, and matches exact path.
      * Callback runs on the main (UI) thread.
@@ -1396,7 +1570,11 @@ public class JellyfinApi {
             return;
         }
 
+<<<<<<< MAINPC 2026-09-09 21:28
         String baseUrl = baseUrl(serverUrl);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+>>>>>>> Z13 2026-08-30 16:27
         String encodedName;
         try {
             encodedName = URLEncoder.encode(searchName, StandardCharsets.UTF_8.name());
@@ -1404,8 +1582,12 @@ public class JellyfinApi {
             encodedName = searchName;
         }
         String url = baseUrl + "/Items?searchTerm=" + encodedName
+<<<<<<< MAINPC 2026-09-09 21:28
                 + "&IncludeItemTypes=Episode&Fields=Path,MediaSources&Recursive=true"
                 + "&Limit=" + SEARCH_BY_PATH_LIMIT;
+=======
+                + "&IncludeItemTypes=Episode&Fields=Path,MediaSources&Recursive=true&Limit=10";
+>>>>>>> Z13 2026-08-30 16:27
 
         Request request = new Request.Builder()
                 .url(url)
@@ -1446,6 +1628,7 @@ public class JellyfinApi {
     }
 
     /**
+<<<<<<< MAINPC 2026-09-09 21:28
      * Builds the media segment URL for an episode, filtered to the two types this app uses.
      * Package-private so the URL shape is unit testable without a network call.
      *
@@ -1467,6 +1650,11 @@ public class JellyfinApi {
      * Returns the raw JSON response body via callback for parsing with parseIntroSkipperResponse().
      * On any non 2xx answer, returns empty JSON "{}" which parses to all -1 sentinels, so a
      * server without the plugin simply plays with no skipping.
+=======
+     * Fetches IntroSkipper segments for an episode from the Jellyfin server.
+     * Returns the raw JSON response body via callback for parsing with parseIntroSkipperResponse().
+     * On 404 or any error, returns empty JSON "{}" which parses to all -1 sentinels (silent no-op).
+>>>>>>> Z13 2026-08-30 16:27
      * Callback runs on the main (UI) thread.
      *
      * @param serverUrl   Base server URL
@@ -1476,7 +1664,12 @@ public class JellyfinApi {
      */
     public static void getIntroSkipperSegments(String serverUrl, String accessToken,
                                                 String itemId, SimpleCallback callback) {
+<<<<<<< MAINPC 2026-09-09 21:28
         String url = buildMediaSegmentsUrl(serverUrl, itemId);
+=======
+        String baseUrl = serverUrl.endsWith("/") ? serverUrl.substring(0, serverUrl.length() - 1) : serverUrl;
+        String url = baseUrl + "/Episode/" + itemId + "/IntroSkipperSegments";
+>>>>>>> Z13 2026-08-30 16:27
 
         Request request = new Request.Builder()
                 .url(url)
@@ -1495,6 +1688,7 @@ public class JellyfinApi {
             public void onResponse(Call call, Response response) throws IOException {
                 try {
                     if (!response.isSuccessful() || response.body() == null) {
+<<<<<<< MAINPC 2026-09-09 21:28
                         int code = response.code();
                         if (code == 401 || code == 403) {
                             Log.w(TAG, "getIntroSkipperSegments: HTTP " + code
@@ -1504,6 +1698,10 @@ public class JellyfinApi {
                             // 404 or other error: silent no-op with empty JSON
                             Log.d(TAG, "getIntroSkipperSegments: HTTP " + code + " for item " + itemId);
                         }
+=======
+                        // 404 or other error: silent no-op with empty JSON
+                        Log.d(TAG, "getIntroSkipperSegments: HTTP " + response.code() + " for item " + itemId);
+>>>>>>> Z13 2026-08-30 16:27
                         getMainHandler().post(() -> callback.onSuccess("{}"));
                         return;
                     }
