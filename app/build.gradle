@@ -10,13 +10,8 @@ android {
         applicationId "com.jellyfintozidoo"
         minSdkVersion 28
         targetSdkVersion 28
-<<<<<<< MAINPC 2026-09-09 21:28
         versionCode 20260902
         versionName "2026.09.2"
-=======
-        versionCode 20260301
-        versionName "2026.03.1"
->>>>>>> Z13 2026-08-30 16:27
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -66,7 +61,6 @@ dependencies {
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-<<<<<<< MAINPC 2026-09-09 21:28
     implementation 'androidx.security:security-crypto:1.1.0'
     testImplementation 'junit:junit:4.13.2'
     implementation 'com.google.code.gson:gson:2.13.1'
@@ -74,15 +68,3 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
     implementation 'jp.wasabeef:glide-transformations:4.3.0'
 }
-=======
-    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-    implementation 'com.android.volley:volley:1.2.0'
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.github.bumptech.glide:glide:4.16.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
-    implementation 'jp.wasabeef:glide-transformations:4.3.0'
-}
->>>>>>> Z13 2026-08-30 16:27
