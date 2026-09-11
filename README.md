@@ -107,6 +107,7 @@ You can configure up to **10 substitution rules** if your media spans multiple s
 
 In your Jellyfin client app, configure it to use JellyfinToZidoo as an external video player. The exact steps depend on which client you use:
 
+- **Wholphin** - In the app's playback settings, choose external player and select JellyfinToZidoo
 - **Jellyfin for Android TV** - Go to Settings > Client Settings > Video Player Type and select "External Player", then choose JellyfinToZidoo when prompted
 - **Moonfin** - Go to Settings > Player and configure the external player option
 
@@ -116,10 +117,13 @@ Browse your library in your Jellyfin client and play any video. The Jellyfin cli
 
 ## Tested Clients
 
-JellyfinToZidoo has been tested and verified with the following Jellyfin clients:
+JellyfinToZidoo is developed and tested against the following Jellyfin clients:
 
+- [**Wholphin**](https://github.com/damontecres/Wholphin) - Open source Jellyfin client for Android TV. This is the client the project is developed and tested on day to day.
 - [**Jellyfin for Android TV**](https://github.com/jellyfin/jellyfin-androidtv) - The official Jellyfin client for Android TV devices
-- [**Moonfin**](https://github.com/Moonfin-Client/AndroidTV-FireTV) - A third-party Jellyfin client for Android TV and Fire TV
+- [**Moonfin**](https://github.com/Moonfin-Client/AndroidTV-FireTV) - A third-party Jellyfin client for Android TV and Fire TV, based on the official client
+
+Clients differ in what they do after JellyfinToZidoo hands playback back to them. Wholphin leaves the watch state to JellyfinToZidoo. Jellyfin for Android TV and Moonfin send their own playback stop report for the item when the external player returns, so JellyfinToZidoo hands the final position back to them on the result intent to keep the resume point and watched status correct. If you stop mid-playback and the resume position is lost or the item is marked watched, make sure you are on the release that fixed [issue #4](https://github.com/magnetgrouplabs/JellyfinToZidoo/issues/4) or later.
 
 JellyfinToZidoo should work with **any Jellyfin client** that supports sending external player intents, including [Findroid](https://github.com/jarnedemeulemeester/findroid) and others. If you have tested it with a client not listed here, feel free to open an issue and let us know.
 
