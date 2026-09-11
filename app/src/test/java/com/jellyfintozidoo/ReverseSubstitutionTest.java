@@ -118,4 +118,58 @@ public class ReverseSubstitutionTest {
     public void extractSearchName_filenameWithSpaces_returnsCorrectStem() {
         assertEquals("My Episode", JellyfinApi.extractSearchName("/media/Shows/My Episode.mkv"));
     }
+
+    // Zidoo mount-path normalization tests
+
+    @Test
+    public void reverseSubstitution_mountedForm_maps() {
+        String[][] r = rules(rule("/media", "smb://192.168.0.154/data/media"));
+        String result = JellyfinApi.reverseSubstitution(
+                "/data/system/smb/192.168.0.154#data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv", r);
+        assertEquals("/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv", result);
+    }
+
+    @Test
+    public void reverseSubstitution_mountedFormWithUrlEncoding_decodesAndMaps() {
+        String[][] r = rules(rule("/media", "smb://192.168.0.154/data/media"));
+        String result = JellyfinApi.reverseSubstitution(
+                "/data/system/smb/192.168.0.154#data/media/movies/My%20Movie.mkv", r);
+        assertEquals("/media/movies/My Movie.mkv", result);
+    }
+
+    @Test
+    public void normalizeZidooPath_launchUriAndMountedForm_areEqual() {
+        String launchUri = "smb://user:pass@192.168.0.154/data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv";
+        String mountedForm = "/data/system/smb/192.168.0.154#data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv";
+        assertEquals(JellyfinApi.normalizeZidooPath(launchUri), JellyfinApi.normalizeZidooPath(mountedForm));
+    }
+
+    @Test
+    public void isSameZidooFile_launchUriAndMountedForm_trueForSameFile() {
+        String launchUri = "smb://user:pass@192.168.0.154/data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv";
+        String mountedForm = "/data/system/smb/192.168.0.154#data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv";
+        assertTrue(JellyfinApi.isSameZidooFile(launchUri, mountedForm));
+    }
+
+    @Test
+    public void isSameZidooFile_differentFilesInMountedForm_returnsFalse() {
+        String fileA = "/data/system/smb/192.168.0.154#data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv";
+        String fileB = "/data/system/smb/192.168.0.154#data/media/movies/Other Movie/Other Movie.mkv";
+        assertFalse(JellyfinApi.isSameZidooFile(fileA, fileB));
+    }
+
+    @Test
+    public void isSameZidooFile_eitherSideNull_returnsFalse() {
+        String mountedForm = "/data/system/smb/192.168.0.154#data/media/movies/Hercules (1997)/Hercules (1997) Bluray-1080p.mkv";
+        assertFalse(JellyfinApi.isSameZidooFile(null, mountedForm));
+        assertFalse(JellyfinApi.isSameZidooFile(mountedForm, null));
+        assertFalse(JellyfinApi.isSameZidooFile(null, null));
+    }
+
+    @Test
+    public void normalizeZidooPath_mountedFormWithNoHash_doesNotThrowAndReturnsSmbPrefixed() {
+        String result = JellyfinApi.normalizeZidooPath("/data/system/smb/192.168.0.154");
+        assertNotNull(result);
+        assertTrue(result.startsWith("smb://"));
+    }
 }

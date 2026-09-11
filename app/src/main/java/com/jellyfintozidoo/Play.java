@@ -937,8 +937,9 @@ public class Play extends AppCompatActivity
                             String nowPlayingPath = video.has("path") ? video.get("path").getAsString() : null;
 
                             // Detect Zidoo auto-advancing to next file — track it
+                            // The Zidoo reports the same file first as the launch URI and later as its mount path, and that is not an advance.
                             if (nowPlayingPath != null && currentPlayingPath != null
-                                    && !nowPlayingPath.equals(currentPlayingPath)) {
+                                    && !JellyfinApi.isSameZidooFile(nowPlayingPath, currentPlayingPath)) {
                                 Log.d("Play", "Zidoo advanced to next file: " + maskCredentials(nowPlayingPath));
                                 currentPlayingPath = nowPlayingPath;
 
