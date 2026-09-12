@@ -641,6 +641,40 @@ public class JellyfinApi {
     }
 
     /**
+     * The Zidoo player reports the file it is playing either as the launch URI (smb://...)
+     * or as its local SMB mount path once the share is mounted; both must compare and map as the same file.
+     */
+    static String normalizeZidooPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+
+        // URL-decode the path (handles %20 etc.)
+        String decoded;
+        try {
+            decoded = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+        } catch (Exception e) {
+            decoded = path;
+        }
+
+        // Mounted form: /data/system/smb/<host>#<share path> -> smb://<host>/<share path>
+        String mountPrefix = "/data/system/smb/";
+        if (decoded.startsWith(mountPrefix)) {
+            String remainder = decoded.substring(mountPrefix.length());
+            int hashIndex = remainder.indexOf('#');
+            if (hashIndex >= 0) {
+                String host = remainder.substring(0, hashIndex);
+                String rest = remainder.substring(hashIndex + 1);
+                return "smb://" + host + "/" + rest;
+            }
+            return "smb://" + remainder;
+        }
+
+        // Strip SMB credentials: smb://user:pass@host -> smb://host
+        return decoded.replaceFirst("smb://[^@]+@", "smb://");
+    }
+
+    /**
      * Reverses path substitution: converts a Zidoo SMB path back to the server-side path.
      * Package-private for testability.
      *
@@ -651,20 +685,10 @@ public class JellyfinApi {
      * @return The server-side path, or null if no rule matches or input is null/empty
      */
     static String reverseSubstitution(String zidooPath, String[][] rules) {
-        if (zidooPath == null || zidooPath.isEmpty()) {
+        String stripped = normalizeZidooPath(zidooPath);
+        if (stripped == null) {
             return null;
         }
-
-        // URL-decode the path (handles %20 etc.)
-        String decoded;
-        try {
-            decoded = URLDecoder.decode(zidooPath, StandardCharsets.UTF_8.name());
-        } catch (Exception e) {
-            decoded = zidooPath;
-        }
-
-        // Strip SMB credentials: smb://user:pass@host -> smb://host
-        String stripped = decoded.replaceFirst("smb://[^@]+@", "smb://");
 
         // Try each rule in order — first match wins
         for (String[] rule : rules) {
@@ -678,6 +702,16 @@ public class JellyfinApi {
         }
 
         return null;
+    }
+
+    /**
+     * True when both paths normalize to the same non-null Zidoo path, regardless of
+     * whether either is spelled as the launch URI or as the local SMB mount path.
+     */
+    static boolean isSameZidooFile(String a, String b) {
+        String normalizedA = normalizeZidooPath(a);
+        String normalizedB = normalizeZidooPath(b);
+        return normalizedA != null && normalizedA.equals(normalizedB);
     }
 
     /**

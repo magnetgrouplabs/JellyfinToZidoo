@@ -1,25 +1,24 @@
-# 2026.09.2: playback polish
+# 2026.09.3: resume position on the official Android TV client
 
 **Still requires Jellyfin server 12.0 or later, same as 2026.09.1.**
 
 ## What changed
 
-**Play from beginning now works**
-- Choosing "Play from beginning" in the Jellyfin client on a partially watched item used to resume at the saved position instead. The app now honors the client's explicit start position, including zero, and only falls back to the server's resume point when the client sends none.
+**Stopping mid playback no longer loses the resume point (issue #4)**
+- On the official Jellyfin Android TV client and on Moonfin, stopping a film or episode part way through lost the resume point and marked the item watched. Those clients send their own playback stop when the app hands control back, and the app returned no position with it, which the server reads as played to the end.
+- The app now returns the final playback position to the launching client, so the client stores the same resume point the app already saved.
+- After an item is watched, or after Up Next hands off to the next episode, the app returns 0 instead. The client then neither wipes a real resume point nor starts its own next episode on top of the one the app launched.
+- When playback never started, the app returns the resume point the item already had, so nothing is lost on an error exit.
 
-**Pausing right after playback starts no longer resumes on its own**
-- The app now waits until the player is confirmed playing before applying the audio and subtitle track selection, and it reports the paused state to Jellyfin instead of always reporting playing.
+**Slow-opening files no longer lose their progress**
+- On a file that takes a few seconds to open, such as a large 4K remux, the app could mistake the Zidoo's own report of the same file for a jump to a different file, stop tracking it, and never report the stop. The resume point was lost on any client, Wholphin included. The app now recognises the Zidoo's mounted path and the launch path as the same file, which also makes the Zidoo's real auto advance to the next file map correctly.
 
-**Smarter early stop**
-- Previously, every episode stopped 30 seconds before the end so Up Next could appear, even when there was no credits data. This sometimes cut off cold endings and mid-credits scenes.
-- Now the episode only stops early when Intro Skipper has marked a credits segment for it. Otherwise the episode plays all the way through, and Up Next appears right after.
+**Wholphin users see no change**
+- Wholphin does not re-report playback, so the client side issue never affected it. It gains the slow-open fix like every other client.
 
-**Settings cleanup**
-- Removed the Auto Play switch in Settings. It never actually changed anything since Up Next always ran, so it was misleading. Up Next itself works exactly the same as before.
-
-**Smaller app**
-- Removed leftover code from this app's Plex origins that had been sitting unused since the fork. No visible change, just a smaller install. The Kodi/ZDMC integration is unaffected.
+**README**
+- The README now names Wholphin as the tested client and explains how the different clients handle the return from an external player.
 
 ## Upgrade notes
 
-Install over your existing 2026.09.1 install: your settings are kept.
+Install over your existing 2026.09.2 install: your settings are kept.
