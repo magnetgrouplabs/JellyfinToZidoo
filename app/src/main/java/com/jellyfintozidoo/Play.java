@@ -108,6 +108,14 @@ public class Play extends AppCompatActivity
     private boolean foundSubstitution = false;
     private String videoPath = "";
     private volatile String jellyfinItemId = "";
+    // The item the launching client handed us. The client attributes the position we return to
+    // this item only, never to an episode we moved on to through Up Next or a Zidoo file advance,
+    // so jellyfinItemId may move on while this one stays put.
+    private String originalItemId = "";
+    // The position handed back on the result intent. 0 wipes the launching client's own resume
+    // point but never marks the item played, so it is the safe value whenever we do not want the
+    // client to write a resume point at all.
+    private volatile long resultPositionMs = 0;
     private String jellyfinApiPath = "";
     private boolean zdmc = false;
     private String callerPackage = "";
@@ -526,6 +534,7 @@ public class Play extends AppCompatActivity
             {
                 // This is a Jellyfin streaming URL -- resolve via API
                 jellyfinItemId = itemId;
+                originalItemId = itemId;
 
                 // Parse audio/subtitle stream indices from intent URL
                 jellyfinAudioStreamIndex = JellyfinApi.parseUrlParam(inputUrl, "AudioStreamIndex");
@@ -550,6 +559,9 @@ public class Play extends AppCompatActivity
                     hasPosition = false;
                     intentPosition = 0;
                 }
+                // Earliest seed for the result position: if the item lookup itself fails, the
+                // client at least gets back the position it sent us.
+                resultPositionMs = intentPosition;
                 final boolean hasIntentPos = hasPosition;
                 final int intentPos = intentPosition;
 
@@ -633,6 +645,9 @@ public class Play extends AppCompatActivity
                         // "Play from beginning" included; the server's saved position is used
                         // only when the extra is absent.
                         viewOffset = resolveStartPositionMs(hasIntentPos, intentPos, positionTicks);
+                        // Seed the result position here too, so a substitution failure that never
+                        // reaches buildZidooIntent still hands the client its own resume point back.
+                        resultPositionMs = viewOffset;
 
                         doSubstitution(serverPath);
                         showDebugPageOrSendIntent();
@@ -731,6 +746,51 @@ public class Play extends AppCompatActivity
     }
 
     /**
+     * Decides the position handed back to the launching client on the result intent, in
+     * milliseconds.
+     *
+     * The official Jellyfin Android TV client sends its own playback stop when this activity
+     * returns, using this value. A null or absent value means played to completion on the
+     * server, which is why a value is always returned. Four rules, in order:
+     *
+     * <ol>
+     *   <li>The current item is not the one the client launched (Up Next or a Zidoo file advance
+     *       moved us on): return 0, because the client would otherwise write another item's
+     *       position onto the original, and 0 also keeps the client from starting its own next
+     *       episode on top of ours.</li>
+     *   <li>The item is watched: return 0. This app has already marked it played with position 0,
+     *       so 0 is what the client should store too.</li>
+     *   <li>A real final position is known: return it, so the client stores what this app stored.</li>
+     *   <li>Nothing is known: return the fallback, the position playback started from.</li>
+     * </ol>
+     *
+     * @param originalItemId    the item the launching client handed us
+     * @param currentItemId     the item playing when playback stopped, may be null
+     * @param finalPositionMs   the final playback position in milliseconds, 0 when unknown
+     * @param finalPositionTicks the same position in ticks, for the watched check
+     * @param durationTicks     the duration used for the watched threshold, 0 when unknown
+     * @param fallbackMs        the position playback started from
+     * @return the position to put on the result intent, never negative
+     */
+    static long resolveResultPositionMs(String originalItemId, String currentItemId,
+            long finalPositionMs, long finalPositionTicks, long durationTicks, long fallbackMs)
+    {
+        if(currentItemId == null || !currentItemId.equals(originalItemId))
+        {
+            return 0;
+        }
+        if(JellyfinApi.isWatched(finalPositionTicks, durationTicks))
+        {
+            return 0;
+        }
+        if(finalPositionMs > 0)
+        {
+            return finalPositionMs;
+        }
+        return Math.max(0, fallbackMs);
+    }
+
+    /**
      * True when consecutive polls report the same position, which means the Zidoo player is
      * paused (or otherwise not advancing). A negative baseline means no previous poll, so the
      * state is unknown and reported as not paused.
@@ -807,13 +867,18 @@ public class Play extends AppCompatActivity
             newIntent.putExtra("title", "");
         }
 
+        // Seed the position we hand back to the launching client with the position playback is
+        // starting from. It is the fallback for every exit where playback never reports a final
+        // position, so the client writes back the resume point the user already had.
         if(viewOffset > 0)
         {
+            resultPositionMs = viewOffset;
             newIntent.putExtra("from_start", false);
             newIntent.putExtra("position", viewOffset);
         }
         else
         {
+            resultPositionMs = 0;
             newIntent.putExtra("from_start", true);
         }
 
@@ -872,8 +937,9 @@ public class Play extends AppCompatActivity
                             String nowPlayingPath = video.has("path") ? video.get("path").getAsString() : null;
 
                             // Detect Zidoo auto-advancing to next file — track it
+                            // The Zidoo reports the same file first as the launch URI and later as its mount path, and that is not an advance.
                             if (nowPlayingPath != null && currentPlayingPath != null
-                                    && !nowPlayingPath.equals(currentPlayingPath)) {
+                                    && !JellyfinApi.isSameZidooFile(nowPlayingPath, currentPlayingPath)) {
                                 Log.d("Play", "Zidoo advanced to next file: " + maskCredentials(nowPlayingPath));
                                 currentPlayingPath = nowPlayingPath;
 
@@ -1124,6 +1190,9 @@ public class Play extends AppCompatActivity
      * Reports the episode as stopped/watched, then launches Up Next.
      */
     private void handleEpisodeCompleted() {
+        // The item is watched or Up Next has moved on, and both want 0 so the launching client
+        // neither wipes a real resume point nor auto plays its own next episode.
+        resultPositionMs = 0;
         handlingPlaybackResult = true;
         runOnUiThread(() -> {
             stopProgressPoller();
@@ -1269,6 +1338,9 @@ public class Play extends AppCompatActivity
             Intent resultData = new Intent();
             resultData.setData(Uri.parse(serverUrl + "/Videos/" + jellyfinItemId + "/stream"));
             resultData.putExtra("itemId", jellyfinItemId);
+            // "position" is the MX Player result API key the official Jellyfin Android TV client
+            // reads off our result intent for the playback stop it sends on its own.
+            resultData.putExtra("position", (int) resultPositionMs);
             setResult(RESULT_OK, resultData);
         }
         finish();
@@ -1463,6 +1535,11 @@ public class Play extends AppCompatActivity
         // threshold and still opens Up Next.
         final long effectiveDurationTicks = durationTicks > 0 ? durationTicks
                 : (lastKnownDurationMs > 0 ? JellyfinApi.msToTicks(lastKnownDurationMs) : 0);
+
+        // Work out what the launching client should store. The current value of resultPositionMs
+        // is the start position seeded when the Zidoo intent was built, used as the fallback.
+        resultPositionMs = resolveResultPositionMs(originalItemId, jellyfinItemId, finalPositionMs,
+                finalPositionTicks, effectiveDurationTicks, resultPositionMs);
 
         // Report playback stopped to Jellyfin
         JellyfinApi.reportPlaybackStopped(serverUrl, accessToken, jellyfinItemId,
