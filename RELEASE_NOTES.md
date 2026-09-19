@@ -1,6 +1,4 @@
-# 2026.09.4-beta.1: playback reporting survives slow opens and player shutdown
-
-**This is a beta for testing the issue #4 fix. It is published as a prerelease and is not marked Latest.**
+# 2026.09.4: playback reporting survives slow opens and player shutdown
 
 ## What changed
 
@@ -16,4 +14,4 @@
 
 ## Upgrade notes
 
-Install over your existing 2026.09.3 install: your settings are kept. Still requires Jellyfin server 12.0 or later.
+Install over your existing 2026.09.3 or 2026.09.4-beta.1 install: your settings are kept. Still requires Jellyfin server 12.0 or later.
