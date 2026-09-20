@@ -79,6 +79,7 @@ jobs:
         files: JellyfinToZidoo.apk
         generate_release_notes: true
         body_path: RELEASE_NOTES.md
+        prerelease: ${{ contains(github.ref_name, '-beta') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,5 +89,6 @@ jobs:
       with:
         files: JellyfinToZidoo.apk
         generate_release_notes: true
+        prerelease: ${{ contains(github.ref_name, '-beta') }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

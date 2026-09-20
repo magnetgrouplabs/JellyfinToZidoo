@@ -950,242 +950,267 @@ public class Play extends AppCompatActivity
                             // Track the file path Zidoo is currently playing
                             String nowPlayingPath = video.has("path") ? video.get("path").getAsString() : null;
 
-                            // Detect Zidoo auto-advancing to next file — track it
-                            // The Zidoo reports the same file first as the launch URI and later as its mount path, and that is not an advance.
-                            if (nowPlayingPath != null && currentPlayingPath != null
-                                    && !JellyfinApi.isSameZidooFile(nowPlayingPath, currentPlayingPath)) {
-                                Log.d("Play", "Zidoo advanced to next file: " + maskCredentials(nowPlayingPath));
-                                currentPlayingPath = nowPlayingPath;
+                            // An empty path means the player is between files: still opening one, or shutting down.
+                            // Position and duration read 0 at those moments, so nothing in this poll is trusted.
+                            if (nowPlayingPath != null && nowPlayingPath.trim().isEmpty()) {
+                                Log.d("Play", "Poll: player between files (empty path), skipping");
+                            } else {
+                                // Detect Zidoo auto-advancing to next file — track it
+                                // The Zidoo reports the same file first as the launch URI and later as its mount path, and that is not an advance.
+                                if (JellyfinApi.isZidooFileChange(nowPlayingPath, currentPlayingPath)) {
+                                    Log.d("Play", "Zidoo advanced to next file: " + maskCredentials(nowPlayingPath));
+                                    currentPlayingPath = nowPlayingPath;
 
-                                // Reset per-episode state for the new file
-                                introSkipArmed = true;
-                                creditSkipArmed = true;
-                                introStartMs = -1; introEndMs = -1;
-                                creditStartMs = -1; creditEndMs = -1;
-                                lastPollPositionMs = -1;
-                                tracksSet = false;
-                                introSegmentsFetched = false;
-                                jellyfinAudioStreamIndex = -1;   // Reset stale indices from previous episode
-                                jellyfinSubtitleStreamIndex = -1; // Will be re-resolved from new episode's MediaStreams
-                                mediaStreams = null;               // Will be re-fetched with getItem for new episode
-
-                                if (upNextTriggered) {
-                                    Log.w("Play", "Auto-advance despite stop command — stop may have failed");
-                                }
-
-                                // Resolve new episode's Jellyfin item ID via path search (binge path)
-                                String[][] subRules = getSubstitutionRules();
-                                String reversedPath = JellyfinApi.reverseSubstitution(nowPlayingPath, subRules);
-                                if (reversedPath != null && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
-                                    JellyfinApi.searchItemByPath(serverUrl, accessToken, reversedPath,
-                                            new JellyfinApi.SearchByPathCallback() {
-                                                @Override
-                                                public void onFound(String itemId) {
-                                                    Log.d("Play", "Binge episode resolved: " + itemId);
-                                                    jellyfinItemId = itemId;
-                                                    playSessionId = java.util.UUID.randomUUID().toString().replace("-", "");
-                                                    durationTicks = 0;
-                                                    upNextTriggered = false;
-
-                                                    // Re-fetch item details for MediaStreams
-                                                    JellyfinApi.getItemDetailed(serverUrl, accessToken, itemId, new JellyfinApi.DetailedCallback() {
-                                                        @Override
-                                                        public void onSuccess(String serverPath, long posTicks, String title, long durTicks, String sid, String rawBody) {
-                                                            durationTicks = durTicks;
-                                                            videoTitle = title;
-                                                            if (sid != null) seriesId = sid;
-
-                                                            // Extract MediaStreams for track mapping
-                                                            try {
-                                                                com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(rawBody).getAsJsonObject();
-                                                                if (root.has("MediaSources")) {
-                                                                    com.google.gson.JsonArray sources = root.getAsJsonArray("MediaSources");
-                                                                    if (sources.size() > 0) {
-                                                                        mediaStreams = sources.get(0).getAsJsonObject().getAsJsonArray("MediaStreams");
-                                                                    }
-                                                                }
-                                                            } catch (Exception e) {
-                                                                Log.w("Play", "Failed to extract MediaStreams for binge ep: " + e.getMessage());
-                                                            }
-
-                                                            // Apply default stream fallbacks
-                                                            if (mediaStreams != null) {
-                                                                jellyfinAudioStreamIndex = JellyfinApi.findDefaultStreamIndex(mediaStreams, "Audio");
-                                                                jellyfinSubtitleStreamIndex = JellyfinApi.findDefaultStreamIndex(mediaStreams, "Subtitle");
-                                                            }
-
-                                                            // Report playback start for new episode
-                                                            JellyfinApi.reportPlaybackStart(serverUrl, accessToken, jellyfinItemId,
-                                                                    playSessionId, new JellyfinApi.SimpleCallback() {
-                                                                @Override public void onSuccess(String msg) { }
-                                                                @Override public void onError(String error) {
-                                                                    Log.w("Play", "Failed to report start for binge ep: " + error);
-                                                                }
-                                                            });
-                                                        }
-                                                        @Override
-                                                        public void onError(String error) {
-                                                            Log.w("Play", "Failed to get binge episode details: " + error);
-                                                        }
-                                                    });
-
-                                                    // Re-fetch IntroSkipper segments for the new binge episode
-                                                    JellyfinApi.getIntroSkipperSegments(serverUrl, accessToken, itemId, new JellyfinApi.SimpleCallback() {
-                                                        @Override
-                                                        public void onSuccess(String message) {
-                                                            try {
-                                                                JellyfinApi.IntroSkipperResult result = JellyfinApi.parseIntroSkipperResponse(message);
-                                                                introStartMs = result.introStartMs();
-                                                                introEndMs = result.introEndMs();
-                                                                creditStartMs = result.creditStartMs();
-                                                                creditEndMs = result.creditEndMs();
-                                                            } catch (Exception e) {
-                                                                Log.w("Play", "Could not read intro skipper segments for the binge episode: " + e.getMessage());
-                                                            }
-                                                            introSegmentsFetched = true;
-                                                        }
-                                                        @Override
-                                                        public void onError(String error) { introSegmentsFetched = true; /* silent no-op */ }
-                                                    });
-                                                }
-
-                                                @Override
-                                                public void onNotFound(String error) {
-                                                    Log.w("Play", "Binge episode not found by path: " + error);
-                                                    // Stop reporting the new file's progress against the previous
-                                                    // episode, which would overwrite its resume position
-                                                    jellyfinItemId = "";
-                                                    playSessionId = "";
-                                                }
-                                            });
-                                } else {
-                                    // No reversed path means no item can be matched for this file
-                                    Log.w("Play", "Could not reverse the new file path, progress reporting paused");
+                                    // Save the previous file's position before tracking moves on. The
+                                    // position has not been overwritten by this poll yet.
+                                    final String previousItemId = jellyfinItemId;
+                                    final String previousSessionId = playSessionId;
+                                    final long previousPositionMs = lastKnownPositionMs;
+                                    if (!previousItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
+                                        JellyfinApi.reportPlaybackStopped(serverUrl, accessToken, previousItemId,
+                                                previousSessionId, JellyfinApi.msToTicks(previousPositionMs),
+                                                new JellyfinApi.SimpleCallback() {
+                                                    @Override public void onSuccess(String msg) { }
+                                                    @Override public void onError(String error) {
+                                                        Log.w("Play", "Failed to report stop for the previous file: " + error);
+                                                    }
+                                                });
+                                    }
+                                    // Cleared right away so this poll cannot report the new file's
+                                    // position against the previous item; onFound sets the new id.
                                     jellyfinItemId = "";
                                     playSessionId = "";
-                                }
-                            }
 
-                            if (nowPlayingPath != null && currentPlayingPath == null) {
-                                currentPlayingPath = nowPlayingPath;
-                            }
+                                    // Reset per-episode state for the new file
+                                    introSkipArmed = true;
+                                    creditSkipArmed = true;
+                                    introStartMs = -1; introEndMs = -1;
+                                    creditStartMs = -1; creditEndMs = -1;
+                                    lastPollPositionMs = -1;
+                                    tracksSet = false;
+                                    introSegmentsFetched = false;
+                                    jellyfinAudioStreamIndex = -1;   // Reset stale indices from previous episode
+                                    jellyfinSubtitleStreamIndex = -1; // Will be re-resolved from new episode's MediaStreams
+                                    mediaStreams = null;               // Will be re-fetched with getItem for new episode
 
-                            if (video.has("duration")) {
-                                lastKnownDurationMs = video.get("duration").getAsLong();
-                            }
+                                    if (upNextTriggered) {
+                                        Log.w("Play", "Auto-advance despite stop command — stop may have failed");
+                                    }
 
-                            if (video.has("currentPosition")) {
-                                long currentPositionMs = video.get("currentPosition").getAsLong();
-                                lastKnownPositionMs = currentPositionMs;
+                                    // Resolve new episode's Jellyfin item ID via path search (binge path)
+                                    String[][] subRules = getSubstitutionRules();
+                                    String reversedPath = JellyfinApi.reverseSubstitution(nowPlayingPath, subRules);
+                                    if (reversedPath != null && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
+                                        JellyfinApi.searchItemByPath(serverUrl, accessToken, reversedPath,
+                                                new JellyfinApi.SearchByPathCallback() {
+                                                    @Override
+                                                    public void onFound(String itemId) {
+                                                        Log.d("Play", "Binge episode resolved: " + itemId);
+                                                        jellyfinItemId = itemId;
+                                                        playSessionId = java.util.UUID.randomUUID().toString().replace("-", "");
+                                                        durationTicks = 0;
+                                                        upNextTriggered = false;
 
-                                // A track switch sent to a paused Realtek player re-primes the
-                                // pipeline and resumes playback on its own, so the one-time
-                                // audio/subtitle selection waits until the position is confirmed
-                                // to be advancing between polls.
-                                boolean playerPaused = isPlayerPaused(lastPollPositionMs, currentPositionMs);
-                                boolean applyTracks = shouldApplyTrackSelection(tracksSet, lastPollPositionMs, currentPositionMs);
-                                if (!tracksSet && !applyTracks) {
-                                    Log.d("Play", "Track selection deferred: player not advancing (pos=" + currentPositionMs
-                                            + " lastPos=" + lastPollPositionMs + " paused=" + playerPaused + ")");
-                                }
-                                if (applyTracks) {
-                                    tracksSet = true;
-                                    Log.d("Play", "Track selection applied at pos=" + currentPositionMs
-                                            + " (advanced from " + lastPollPositionMs + ")");
-                                    new Thread(() -> {
-                                        try { Thread.sleep(500); } catch (InterruptedException e) { return; }
-                                        if (jellyfinAudioStreamIndex >= 0 && mediaStreams != null) {
-                                            int zidooAudioIdx = JellyfinApi.jellyfinToZidooAudioIndex(mediaStreams, jellyfinAudioStreamIndex);
-                                            if (zidooAudioIdx >= 0) setZidooAudio(zidooAudioIdx);
-                                        }
-                                        if (jellyfinSubtitleStreamIndex >= 0 && mediaStreams != null) {
-                                            int zidooSubIdx = JellyfinApi.jellyfinToZidooSubtitleIndex(mediaStreams, jellyfinSubtitleStreamIndex);
-                                            if (zidooSubIdx >= 0) setZidooSubtitle(zidooSubIdx);
-                                        }
-                                    }).start();
-                                }
+                                                        // Re-fetch item details for MediaStreams
+                                                        JellyfinApi.getItemDetailed(serverUrl, accessToken, itemId, new JellyfinApi.DetailedCallback() {
+                                                            @Override
+                                                            public void onSuccess(String serverPath, long posTicks, String title, long durTicks, String sid, String rawBody) {
+                                                                durationTicks = durTicks;
+                                                                videoTitle = title;
+                                                                if (sid != null) seriesId = sid;
 
-                                long positionTicks = JellyfinApi.msToTicks(currentPositionMs);
-                                // Report progress to Jellyfin
-                                if (!jellyfinItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
-                                    JellyfinApi.reportPlaybackProgress(serverUrl, accessToken,
-                                            jellyfinItemId, playSessionId, positionTicks, playerPaused,
-                                            new JellyfinApi.SimpleCallback() {
-                                                @Override public void onSuccess(String msg) { }
-                                                @Override public void onError(String error) {
-                                                    Log.w("Play", "Progress report failed: " + error);
-                                                }
-                                            });
-                                }
+                                                                // Extract MediaStreams for track mapping
+                                                                try {
+                                                                    com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(rawBody).getAsJsonObject();
+                                                                    if (root.has("MediaSources")) {
+                                                                        com.google.gson.JsonArray sources = root.getAsJsonArray("MediaSources");
+                                                                        if (sources.size() > 0) {
+                                                                            mediaStreams = sources.get(0).getAsJsonObject().getAsJsonArray("MediaStreams");
+                                                                        }
+                                                                    }
+                                                                } catch (Exception e) {
+                                                                    Log.w("Play", "Failed to extract MediaStreams for binge ep: " + e.getMessage());
+                                                                }
 
-                                // Adaptive polling: speed up when nearing end of episode
-                                long remainingMs = lastKnownDurationMs - currentPositionMs;
-                                String seriesIdForLog = seriesId.isEmpty() ? "EMPTY"
-                                        : (seriesId.length() > 8 ? seriesId.substring(0, 8) : seriesId);
-                                Log.d("Play", "Poll: pos=" + currentPositionMs + " dur=" + lastKnownDurationMs + " remaining=" + remainingMs + "ms seriesId=" + seriesIdForLog);
-                                if (lastKnownDurationMs > 0 && remainingMs < 60000) {
-                                    nextDelay = 3000; // 3s polls in final minute
-                                }
+                                                                // Apply default stream fallbacks
+                                                                if (mediaStreams != null) {
+                                                                    jellyfinAudioStreamIndex = JellyfinApi.findDefaultStreamIndex(mediaStreams, "Audio");
+                                                                    jellyfinSubtitleStreamIndex = JellyfinApi.findDefaultStreamIndex(mediaStreams, "Subtitle");
+                                                                }
 
-                                // Read settings toggles
-                                android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(Play.this);
-                                boolean skipIntrosEnabled = prefs.getBoolean("skip_intros", true);
-                                boolean skipCreditsEnabled = prefs.getBoolean("skip_credits", true);
+                                                                // Report playback start for new episode
+                                                                JellyfinApi.reportPlaybackStart(serverUrl, accessToken, jellyfinItemId,
+                                                                        playSessionId, new JellyfinApi.SimpleCallback() {
+                                                                    @Override public void onSuccess(String msg) { }
+                                                                    @Override public void onError(String error) {
+                                                                        Log.w("Play", "Failed to report start for binge ep: " + error);
+                                                                    }
+                                                                });
+                                                            }
+                                                            @Override
+                                                            public void onError(String error) {
+                                                                Log.w("Play", "Failed to get binge episode details: " + error);
+                                                            }
+                                                        });
 
-                                // Detect manual seek (position jump detection)
-                                if (lastPollPositionMs >= 0) {
-                                    long positionDelta = currentPositionMs - lastPollPositionMs;
-                                    boolean likelyManualSeek = positionDelta < -3000 || positionDelta > 30000;
+                                                        // Re-fetch IntroSkipper segments for the new binge episode
+                                                        JellyfinApi.getIntroSkipperSegments(serverUrl, accessToken, itemId, new JellyfinApi.SimpleCallback() {
+                                                            @Override
+                                                            public void onSuccess(String message) {
+                                                                try {
+                                                                    JellyfinApi.IntroSkipperResult result = JellyfinApi.parseIntroSkipperResponse(message);
+                                                                    introStartMs = result.introStartMs();
+                                                                    introEndMs = result.introEndMs();
+                                                                    creditStartMs = result.creditStartMs();
+                                                                    creditEndMs = result.creditEndMs();
+                                                                } catch (Exception e) {
+                                                                    Log.w("Play", "Could not read intro skipper segments for the binge episode: " + e.getMessage());
+                                                                }
+                                                                introSegmentsFetched = true;
+                                                            }
+                                                            @Override
+                                                            public void onError(String error) { introSegmentsFetched = true; /* silent no-op */ }
+                                                        });
+                                                    }
 
-                                    if (likelyManualSeek) {
-                                        if (introSkipArmed && currentPositionMs < introEndMs) {
-                                            introSkipArmed = false;
-                                            Log.d("Play", "Intro skip disarmed (manual seek to " + currentPositionMs + "ms)");
-                                        }
-                                        if (creditSkipArmed && currentPositionMs < creditStartMs) {
-                                            creditSkipArmed = false;
-                                            Log.d("Play", "Credit skip disarmed (manual seek to " + currentPositionMs + "ms)");
-                                        }
+                                                    @Override
+                                                    public void onNotFound(String error) {
+                                                        Log.w("Play", "Binge episode not found by path: " + error);
+                                                        // Stop reporting the new file's progress against the previous
+                                                        // episode, which would overwrite its resume position
+                                                        jellyfinItemId = "";
+                                                        playSessionId = "";
+                                                    }
+                                                });
+                                    } else {
+                                        // No reversed path means no item can be matched for this file
+                                        Log.w("Play", "Could not reverse the new file path, progress reporting paused");
+                                        jellyfinItemId = "";
+                                        playSessionId = "";
                                     }
                                 }
 
-                                // Intro skip check (only after we have baseline position -- NOT on first poll)
-                                if (skipIntrosEnabled && introSkipArmed && introStartMs >= 0
-                                        && lastPollPositionMs >= 0  // Must have baseline (resume protection)
-                                        && currentPositionMs >= introStartMs && currentPositionMs < introEndMs) {
-                                    Log.d("Play", "Skipping intro: seeking from " + currentPositionMs + "ms to " + introEndMs + "ms");
-                                    seekZidoo(introEndMs);
-                                    introSkipArmed = false;  // Prevent re-triggering
+                                if (nowPlayingPath != null && !nowPlayingPath.isEmpty() && currentPlayingPath == null) {
+                                    currentPlayingPath = nowPlayingPath;
                                 }
 
-                                // Credit skip check (only for TV shows with seriesId, and only after baseline)
-                                if (skipCreditsEnabled && creditSkipArmed && creditStartMs >= 0
-                                        && lastPollPositionMs >= 0
-                                        && !seriesId.isEmpty()  // TV shows only
-                                        && currentPositionMs >= creditStartMs
-                                        && !upNextTriggered) {
-                                    Log.d("Play", "Credits reached at " + currentPositionMs + "ms, triggering Up Next");
-                                    upNextTriggered = true;
-                                    creditSkipArmed = false;
-                                    // Same pattern as generic stop — finishActivity triggers onActivityResult → handleEpisodeCompleted
-                                    runOnUiThread(() -> {
-                                        try {
-                                            finishActivity(98);
-                                            Log.d("Play", "Credit skip: finishActivity(98) sent");
-                                        } catch (Exception e) {
-                                            Log.w("Play", "Credit skip: finishActivity failed: " + e.getMessage());
+                                if (video.has("duration")) {
+                                    lastKnownDurationMs = video.get("duration").getAsLong();
+                                }
+
+                                if (video.has("currentPosition")) {
+                                    long currentPositionMs = video.get("currentPosition").getAsLong();
+                                    lastKnownPositionMs = currentPositionMs;
+
+                                    // A track switch sent to a paused Realtek player re-primes the
+                                    // pipeline and resumes playback on its own, so the one-time
+                                    // audio/subtitle selection waits until the position is confirmed
+                                    // to be advancing between polls.
+                                    boolean playerPaused = isPlayerPaused(lastPollPositionMs, currentPositionMs);
+                                    boolean applyTracks = shouldApplyTrackSelection(tracksSet, lastPollPositionMs, currentPositionMs);
+                                    if (!tracksSet && !applyTracks) {
+                                        Log.d("Play", "Track selection deferred: player not advancing (pos=" + currentPositionMs
+                                                + " lastPos=" + lastPollPositionMs + " paused=" + playerPaused + ")");
+                                    }
+                                    if (applyTracks) {
+                                        tracksSet = true;
+                                        Log.d("Play", "Track selection applied at pos=" + currentPositionMs
+                                                + " (advanced from " + lastPollPositionMs + ")");
+                                        new Thread(() -> {
+                                            try { Thread.sleep(500); } catch (InterruptedException e) { return; }
+                                            if (jellyfinAudioStreamIndex >= 0 && mediaStreams != null) {
+                                                int zidooAudioIdx = JellyfinApi.jellyfinToZidooAudioIndex(mediaStreams, jellyfinAudioStreamIndex);
+                                                if (zidooAudioIdx >= 0) setZidooAudio(zidooAudioIdx);
+                                            }
+                                            if (jellyfinSubtitleStreamIndex >= 0 && mediaStreams != null) {
+                                                int zidooSubIdx = JellyfinApi.jellyfinToZidooSubtitleIndex(mediaStreams, jellyfinSubtitleStreamIndex);
+                                                if (zidooSubIdx >= 0) setZidooSubtitle(zidooSubIdx);
+                                            }
+                                        }).start();
+                                    }
+
+                                    long positionTicks = JellyfinApi.msToTicks(currentPositionMs);
+                                    // Report progress to Jellyfin
+                                    if (!jellyfinItemId.isEmpty() && !serverUrl.isEmpty() && !accessToken.isEmpty()) {
+                                        JellyfinApi.reportPlaybackProgress(serverUrl, accessToken,
+                                                jellyfinItemId, playSessionId, positionTicks, playerPaused,
+                                                new JellyfinApi.SimpleCallback() {
+                                                    @Override public void onSuccess(String msg) { }
+                                                    @Override public void onError(String error) {
+                                                        Log.w("Play", "Progress report failed: " + error);
+                                                    }
+                                                });
+                                    }
+
+                                    // Adaptive polling: speed up when nearing end of episode
+                                    long remainingMs = lastKnownDurationMs - currentPositionMs;
+                                    String seriesIdForLog = seriesId.isEmpty() ? "EMPTY"
+                                            : (seriesId.length() > 8 ? seriesId.substring(0, 8) : seriesId);
+                                    Log.d("Play", "Poll: pos=" + currentPositionMs + " dur=" + lastKnownDurationMs + " remaining=" + remainingMs + "ms seriesId=" + seriesIdForLog);
+                                    if (lastKnownDurationMs > 0 && remainingMs < 60000) {
+                                        nextDelay = 3000; // 3s polls in final minute
+                                    }
+
+                                    // Read settings toggles
+                                    android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(Play.this);
+                                    boolean skipIntrosEnabled = prefs.getBoolean("skip_intros", true);
+                                    boolean skipCreditsEnabled = prefs.getBoolean("skip_credits", true);
+
+                                    // Detect manual seek (position jump detection)
+                                    if (lastPollPositionMs >= 0) {
+                                        long positionDelta = currentPositionMs - lastPollPositionMs;
+                                        boolean likelyManualSeek = positionDelta < -3000 || positionDelta > 30000;
+
+                                        if (likelyManualSeek) {
+                                            if (introSkipArmed && currentPositionMs < introEndMs) {
+                                                introSkipArmed = false;
+                                                Log.d("Play", "Intro skip disarmed (manual seek to " + currentPositionMs + "ms)");
+                                            }
+                                            if (creditSkipArmed && currentPositionMs < creditStartMs) {
+                                                creditSkipArmed = false;
+                                                Log.d("Play", "Credit skip disarmed (manual seek to " + currentPositionMs + "ms)");
+                                            }
                                         }
-                                    });
+                                    }
+
+                                    // Intro skip check (only after we have baseline position -- NOT on first poll)
+                                    if (skipIntrosEnabled && introSkipArmed && introStartMs >= 0
+                                            && lastPollPositionMs >= 0  // Must have baseline (resume protection)
+                                            && currentPositionMs >= introStartMs && currentPositionMs < introEndMs) {
+                                        Log.d("Play", "Skipping intro: seeking from " + currentPositionMs + "ms to " + introEndMs + "ms");
+                                        seekZidoo(introEndMs);
+                                        introSkipArmed = false;  // Prevent re-triggering
+                                    }
+
+                                    // Credit skip check (only for TV shows with seriesId, and only after baseline)
+                                    if (skipCreditsEnabled && creditSkipArmed && creditStartMs >= 0
+                                            && lastPollPositionMs >= 0
+                                            && !seriesId.isEmpty()  // TV shows only
+                                            && currentPositionMs >= creditStartMs
+                                            && !upNextTriggered) {
+                                        Log.d("Play", "Credits reached at " + currentPositionMs + "ms, triggering Up Next");
+                                        upNextTriggered = true;
+                                        creditSkipArmed = false;
+                                        // Same pattern as generic stop — finishActivity triggers onActivityResult → handleEpisodeCompleted
+                                        runOnUiThread(() -> {
+                                            try {
+                                                finishActivity(98);
+                                                Log.d("Play", "Credit skip: finishActivity(98) sent");
+                                            } catch (Exception e) {
+                                                Log.w("Play", "Credit skip: finishActivity failed: " + e.getMessage());
+                                            }
+                                        });
+                                    }
+
+                                    lastPollPositionMs = currentPositionMs;
+
+                                    // There is deliberately no unconditional stop near the end of an episode.
+                                    // The player is only stopped early when Intro Skipper gave us a credits
+                                    // segment and playback reached it (the credit skip check above). Without a
+                                    // credits segment the episode plays to its natural end and the Zidoo end of
+                                    // playback result drives the Up Next flow in onActivityResult.
+
                                 }
-
-                                lastPollPositionMs = currentPositionMs;
-
-                                // There is deliberately no unconditional stop near the end of an episode.
-                                // The player is only stopped early when Intro Skipper gave us a credits
-                                // segment and playback reached it (the credit skip check above). Without a
-                                // credits segment the episode plays to its natural end and the Zidoo end of
-                                // playback result drives the Up Next flow in onActivityResult.
-
                             }
                         }
                     }
@@ -1526,6 +1551,11 @@ public class Play extends AppCompatActivity
 
         // Skip reporting for non-Jellyfin playback or ZDMC
         if (jellyfinItemId.isEmpty() || serverUrl.isEmpty() || accessToken.isEmpty() || zdmc) {
+            String skipReason = zdmc ? "zdmc"
+                    : jellyfinItemId.isEmpty() ? "item id empty"
+                    : serverUrl.isEmpty() ? "no server"
+                    : "no token";
+            Log.w("Play", "Stop report skipped: " + skipReason);
             handlingPlaybackResult = false;
             finishWithResult();
             return;

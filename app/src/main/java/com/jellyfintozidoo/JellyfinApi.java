@@ -715,6 +715,17 @@ public class JellyfinApi {
     }
 
     /**
+     * True only when both paths normalize to non-null Zidoo paths that differ. An empty or
+     * missing path on either side (the player opening or closing a file) is never a file change.
+     */
+    static boolean isZidooFileChange(String nowPath, String currentPath) {
+        String normalizedNow = normalizeZidooPath(nowPath);
+        String normalizedCurrent = normalizeZidooPath(currentPath);
+        return normalizedNow != null && normalizedCurrent != null
+                && !normalizedNow.equals(normalizedCurrent);
+    }
+
+    /**
      * Extracts the filename stem (without extension) from a server-side path.
      * Used as the search term for Jellyfin item lookup by path.
      * Package-private for testability.
