@@ -1,0 +1,94 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v20*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Cache Gradle packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Run Unit Tests
+      run: ./gradlew test
+
+    - name: Decode signing keystore
+      run: echo "${{ secrets.JF2Z_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+    - name: Build Release APK
+      run: ./gradlew assembleRelease
+      env:
+        JF2Z_KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+        JF2Z_KEYSTORE_PASSWORD: ${{ secrets.JF2Z_KEYSTORE_PASSWORD }}
+        JF2Z_KEY_ALIAS: ${{ secrets.JF2Z_KEY_ALIAS }}
+        JF2Z_KEY_PASSWORD: ${{ secrets.JF2Z_KEY_PASSWORD }}
+
+    - name: Verify signed APK and rename
+      run: |
+        if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+          mv app/build/outputs/apk/release/app-release.apk JellyfinToZidoo.apk
+        elif [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+          echo "::error::Release build produced an unsigned APK; refusing to publish. Check the JF2Z_KEYSTORE_* secrets."
+          exit 1
+        else
+          echo "::error::No release APK found in app/build/outputs/apk/release"
+          exit 1
+        fi
+
+    - name: Verify APK signature
+      run: $ANDROID_HOME/build-tools/34.0.0/apksigner verify --print-certs JellyfinToZidoo.apk | grep -i cert
+
+    - name: Check for release notes file
+      id: notes
+      run: |
+        if [ -f RELEASE_NOTES.md ]; then
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Create GitHub Release (with notes file)
+      if: steps.notes.outputs.exists == 'true'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: JellyfinToZidoo.apk
+        generate_release_notes: true
+        body_path: RELEASE_NOTES.md
+        prerelease: ${{ contains(github.ref_name, '-beta') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create GitHub Release (auto notes only)
+      if: steps.notes.outputs.exists == 'false'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: JellyfinToZidoo.apk
+        generate_release_notes: true
+        prerelease: ${{ contains(github.ref_name, '-beta') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

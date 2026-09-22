@@ -1,0 +1,54 @@
+<resources>
+    <string name="app_name">JellyfinToZidoo</string>
+
+    <!-- Preference Titles -->
+    <string name="version_settings">Version</string>
+    <string name="general_settings">General</string>
+    <string name="player_settings">Player</string>
+    <string name="jellyfin_settings">Jellyfin</string>
+    <string name="substitution_settings">Substitutions</string>
+    <string name="import_export_settings">Import/Export Settings</string>
+
+    <!-- General Preferences -->
+    <string name="debug_title">Debug data</string>
+    <!-- Player Preferences -->
+    <string name="useZidooPlayer_title">Use zidoo native player</string>
+    <string name="showTitle_title">Show title when zidoo player starts</string>
+    <string name="skip_intros_title">Skip intros</string>
+    <string name="skip_credits_title">Skip credits</string>
+    <!-- Jellyfin Preferences -->
+    <string name="jellyfin_server_settings">Jellyfin Server</string>
+    <string name="jellyfin_server_url_title">Server URL</string>
+    <string name="jellyfin_server_url_summary">e.g. http://192.168.1.10:8096</string>
+    <string name="jellyfin_username_title">Username</string>
+    <string name="jellyfin_password_title">Password</string>
+    <string name="jellyfin_login_title">Login</string>
+    <string name="jellyfin_login_summary">Authenticate with Jellyfin server</string>
+    <!-- Substitution Preferences -->
+    <string name="substitution_description">Multiple substitution strings must be separated by a \",\"\nThe part of the path to replace is matched at the start of the path, so enter it as a prefix\nThe username and password fields do not allow multiple entries, use the additional substitutions screen if you need a different username/password per substitution"</string>
+    <string name="path_to_replace">Part of the path to replace</string>
+    <string name="replaced_with">Replaced with</string>
+    <string name="smbUsername_title">Smb username (if needed)</string>
+    <string name="smbPassword_title">Smb password (if needed)</string>
+    <string name="substitution_link">Add additional substitutions</string>
+    <string name="substitution_rule_2_title">Path Substitution Rule 2 (optional)</string>
+    <string name="substitution_link_more">More Substitution Rules (3-10)...</string>
+    <!-- Import/Export -->
+    <string name="import_export_description">Settings are imported/exported using the file JellyfinToZidooSettings.txt in the Download directory\nNOTE: Passwords and login tokens are left out of the export unless you turn on \"Include passwords in export\"</string>
+    <string name="export_include_passwords_title">Include passwords in export</string>
+    <string name="export_include_passwords_summary">Writes the Jellyfin and SMB passwords into the export file in plain text. The file is not encrypted and any app with storage access can read it.</string>
+    <string name="import_button_title">Import</string>
+    <string name="export_button_title">Export</string>
+
+    <!-- Substitution Preferences Screen -->
+    <string name="substitution_back_button_title">Back</string>
+
+    <!-- Play activity -->
+    <string name="play_button_title">Play</string>
+
+    <!-- Up Next activity -->
+    <string name="up_next_label">Up Next</string>
+    <string name="play_now">Play Now</string>
+    <string name="cancel">Cancel</string>
+
+</resources>

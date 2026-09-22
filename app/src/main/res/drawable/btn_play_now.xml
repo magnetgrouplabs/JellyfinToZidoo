@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Focused state (D-pad selected) — brighter purple with white border -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#CC5CC3" />
+            <corners android:radius="6dp" />
+            <stroke android:width="3dp" android:color="#FFFFFF" />
+        </shape>
+    </item>
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#7C2D9E" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+    <!-- Default state — Jellyfin purple -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#AA5CC3" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+</selector>
