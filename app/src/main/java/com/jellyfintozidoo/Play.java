@@ -161,6 +161,20 @@ public class Play extends AppCompatActivity
     private int jellyfinSubtitleStreamIndex = -1;
     private volatile com.google.gson.JsonArray mediaStreams = null;  // Parsed from getItem response
 
+    // Intro/credit skip state
+    private boolean introSkipArmed = true;
+    private boolean creditSkipArmed = true;
+    private long introStartMs = -1, introEndMs = -1;
+    private long creditStartMs = -1, creditEndMs = -1;
+    private long lastPollPositionMs = -1;
+    private boolean tracksSet = false;  // Set audio/subtitle only once per episode
+    private boolean introSegmentsFetched = false;
+
+    // Audio/subtitle from intent URL
+    private int jellyfinAudioStreamIndex = -1;
+    private int jellyfinSubtitleStreamIndex = -1;
+    private com.google.gson.JsonArray mediaStreams = null;  // Parsed from getItem response
+
     private TextView textView1;
     private TextView textView2;
     private Button playButton;
