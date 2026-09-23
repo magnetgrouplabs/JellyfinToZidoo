@@ -95,6 +95,18 @@
             android:title="@string/skip_credits_title"
             android:dependency="useZidooPlayer" />
 
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_intros"
+            android:title="@string/skip_intros_title"
+            android:dependency="useZidooPlayer" />
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="skip_credits"
+            android:title="@string/skip_credits_title"
+            android:dependency="useZidooPlayer" />
+
     </PreferenceCategory>
 
     <PreferenceCategory app:title="@string/substitution_settings">
