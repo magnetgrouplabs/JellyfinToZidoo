@@ -135,15 +135,6 @@ public class Play extends AppCompatActivity
     private volatile java.util.concurrent.ScheduledExecutorService progressPoller = null;
 
     // Intro/credit skip state
-    /* Previously, per Z13 2026-09-20 15:27: these fields were declared without volatile:
-    private boolean introSkipArmed = true;
-    private boolean creditSkipArmed = true;
-    private long introStartMs = -1, introEndMs = -1;
-    private long creditStartMs = -1, creditEndMs = -1;
-    private long lastPollPositionMs = -1;
-    private boolean tracksSet = false;  // Set audio/subtitle only once per episode
-    private boolean introSegmentsFetched = false;
-    */
     private volatile boolean introSkipArmed = true;
     private volatile boolean creditSkipArmed = true;
     private volatile long introStartMs = -1, introEndMs = -1;
@@ -153,27 +144,9 @@ public class Play extends AppCompatActivity
     private volatile boolean introSegmentsFetched = false;
 
     // Audio/subtitle from intent URL
-    /* Previously, per Z13 2026-09-20 15:27: these fields were declared without volatile:
-    private int jellyfinAudioStreamIndex = -1;
-    private com.google.gson.JsonArray mediaStreams = null;  // Parsed from getItem response
-    */
     private volatile int jellyfinAudioStreamIndex = -1;
     private int jellyfinSubtitleStreamIndex = -1;
     private volatile com.google.gson.JsonArray mediaStreams = null;  // Parsed from getItem response
-
-    // Intro/credit skip state
-    private boolean introSkipArmed = true;
-    private boolean creditSkipArmed = true;
-    private long introStartMs = -1, introEndMs = -1;
-    private long creditStartMs = -1, creditEndMs = -1;
-    private long lastPollPositionMs = -1;
-    private boolean tracksSet = false;  // Set audio/subtitle only once per episode
-    private boolean introSegmentsFetched = false;
-
-    // Audio/subtitle from intent URL
-    private int jellyfinAudioStreamIndex = -1;
-    private int jellyfinSubtitleStreamIndex = -1;
-    private com.google.gson.JsonArray mediaStreams = null;  // Parsed from getItem response
 
     private TextView textView1;
     private TextView textView2;
