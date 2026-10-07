@@ -354,8 +354,11 @@ public class Play extends AppCompatActivity
                                 path = path.replaceAll("nfs://(.*?)/", "/mnt/nfs/$1#");
                             }
                         }
-                        else
+                        else if (!path.startsWith("/"))
                         {
+                            // Only URI targets such as smb:// are percent-encoded. A local
+                            // filesystem path such as /storage/<id>/... stays literal, otherwise
+                            // a name containing [ ] no longer matches the file on disk (issue #5).
                             path = Uri.encode(path, "/ :");
                         }
 
