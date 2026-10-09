@@ -359,7 +359,10 @@ public class Play extends AppCompatActivity
                             // Only URI targets such as smb:// are percent-encoded. A local
                             // filesystem path such as /storage/<id>/... stays literal, otherwise
                             // a name containing [ ] no longer matches the file on disk (issue #5).
-                            path = Uri.encode(path, "/ :");
+                            // [ ] { } are also kept literal in URI targets such as smb://, because
+                            // the Zidoo player did not play a file whose smb path carried them as
+                            // %5B %5D %7B %7D (issue #5, second reporter). # and % stay encoded.
+                            path = Uri.encode(path, "/ :[]{}");
                         }
 
                         // If this is an SMB request add user name and password to the path.
